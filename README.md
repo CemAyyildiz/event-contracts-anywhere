@@ -29,9 +29,16 @@ apps/dashboard        # host register + embed snippet
 - RPC: `https://dream-rpc.somnia.network`
 - SDK: `@somnia-chain/markets-sdk` ^0.29.0
 
+## Quick start
+
+```bash
+pnpm install
+pnpm spike:markets    # S1 — list Shannon BTC/ETH EC windows
+```
+
 ## Build order
 
-1. Spikes S1–S3 → `docs/spike.md`
+1. Spikes S1–S3 → `docs/spike.md` — **S1 = GO** (2026-09-09)
 2. `trade-core` smoke: fund → mintSet-fill → redeem
 3. Widget + demo page
 4. Burner + sponsor

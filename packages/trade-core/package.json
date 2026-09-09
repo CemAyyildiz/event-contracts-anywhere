@@ -1,0 +1,21 @@
+{
+  "name": "@eca/trade-core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "spike:markets": "tsx scripts/spike-markets.ts",
+    "trade:smoke": "tsx scripts/smoke-roundtrip.ts"
+  },
+  "dependencies": {
+    "@somnia-chain/markets-sdk": "^0.29.0",
+    "viem": "^2.37.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
