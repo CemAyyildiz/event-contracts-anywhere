@@ -20,7 +20,9 @@ import { redeem } from "../src/redeem.js";
 function loadEnvFile() {
   const candidates = [
     resolve(process.cwd(), "../../.env"),
+    resolve(process.cwd(), "../../.smoke-key"),
     resolve(process.cwd(), ".env"),
+    resolve(process.cwd(), ".smoke-key"),
     resolve(process.cwd(), "../../../.env"),
   ];
   for (const p of candidates) {
@@ -39,7 +41,6 @@ function loadEnvFile() {
       if (process.env[key] === undefined) process.env[key] = val;
     }
     console.log("loaded env:", p);
-    return;
   }
 }
 
@@ -178,6 +179,9 @@ After funding:
   await waitForSettle(exchange, market.marketId, market.expiryMs);
   const red = await redeem(exchange, market.marketSymbol);
   console.log("redeem:", red);
+  if (red.reason === "losing-or-empty") {
+    console.log("OK — market settled; this side had nothing to redeem (likely lost).");
+  }
 
   await exchange.close();
   console.log("=== smoke done ===");

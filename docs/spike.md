@@ -12,6 +12,13 @@ Filled from live Shannon runs. Architecture branches on S1–S3.
 
 **Verdict: GO** — Shannon testnet has rolling short-window BTC/ETH Event Contracts that are on-chain `Trading` (status `1`) with live top-of-book.
 
+### Blocker (writes)
+
+Shannon **STT gas** required for `pnpm trade:smoke` / faucet(tUSDC) / trades. Public faucets may be rate-limited — ask Somnia/DreamDEX hackathon DevRel if needed.
+
+**Smoke signer (do not share the private key):** `0x174Ac1a3679dc4B0d900aC33AFE678d2cb778dF2`  
+Key lives only in local gitignored `.smoke-key`.
+
 ### Run
 
 ```bash
@@ -48,7 +55,7 @@ WS `watchOrderBook` opened; probe logging hit a BigInt JSON serialize issue only
 - Proceed with `getTradeableMarket` + `buyGuaranteed` against BTC/ETH short windows.
 - Enforce **TTL &gt; 60s** (skip the ~25s leftovers; use successor).
 - Collateral symbol on testnet books: **tUSDC** (not mainnet USDso).
-
+- **tUSDC** comes from SDK `trader.faucet()` once STT gas exists.
 ## S2 — Router / mint feasibility
 
 _TODO — Epic 1.5 Foundry / ABI probe_

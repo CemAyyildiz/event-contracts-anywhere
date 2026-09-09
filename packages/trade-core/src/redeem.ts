@@ -51,8 +51,14 @@ export async function redeem(
         reason: "not-settled",
       };
     }
-    if (/zero|nothing|no balance|amount/i.test(msg)) {
-      return { redeemed: false, amount: 0, payoutHint: 0, reason: "no-op" };
+    // Losing side or already claimed — settlement complete, nothing to pay out.
+    if (/InsufficientBalance|zero|nothing|no balance|amount/i.test(msg)) {
+      return {
+        redeemed: false,
+        amount: redeemAmount,
+        payoutHint: 0,
+        reason: "losing-or-empty",
+      };
     }
     throw new TradeCoreError(`redeem failed: ${msg}`, "FillFailed");
   }
