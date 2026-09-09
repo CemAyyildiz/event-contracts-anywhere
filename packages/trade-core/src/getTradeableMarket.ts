@@ -5,6 +5,9 @@ import {
 
 export type TradeableMarket = {
   marketId: string;
+  /** Market symbol for mintSet/redeem (no #YES/#NO). */
+  marketSymbol: string;
+  /** @deprecated alias of upSymbol — prefer upSymbol / marketSymbol */
   symbol: string;
   upSymbol: string;
   downSymbol?: string;
@@ -70,6 +73,7 @@ export async function getTradeableMarket(
 
     rows.push({
       marketId: String(m.info.marketId ?? m.id),
+      marketSymbol: m.symbol,
       symbol: upSymbol,
       upSymbol,
       downSymbol: m.outcomes?.[1]?.symbol,

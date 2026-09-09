@@ -34,12 +34,13 @@ apps/dashboard        # host register + embed snippet
 ```bash
 pnpm install
 pnpm spike:markets    # S1 — list Shannon BTC/ETH EC windows
+pnpm trade:smoke      # needs STT gas + PRIVATE_KEY in .env
 ```
 
 ## Build order
 
 1. Spikes S1–S3 → `docs/spike.md` — **S1 = GO** (2026-09-09)
-2. `trade-core` smoke: fund → mintSet-fill → redeem
+2. `trade-core` smoke: fund → mintSet-fill → redeem ← **in progress**
 3. Widget + demo page
 4. Burner + sponsor
 5. Attribution (A or B) + indexer + dashboard
