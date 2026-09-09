@@ -4,7 +4,9 @@
   "packageManager": "pnpm@10.13.1",
   "scripts": {
     "spike:markets": "pnpm --filter @eca/trade-core spike:markets",
-    "trade:smoke": "pnpm --filter @eca/trade-core trade:smoke"
+    "trade:smoke": "pnpm --filter @eca/trade-core trade:smoke",
+    "widget:dev": "pnpm --filter @eca/widget dev",
+    "widget:build": "pnpm --filter @eca/widget build"
   },
   "engines": {
     "node": ">=20"
