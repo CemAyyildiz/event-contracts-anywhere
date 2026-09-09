@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build / cache
+dist/
+build/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.vite/
+coverage/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Foundry
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+packages/contracts/lib/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs & local DB
+*.log
+npm-debug.log*
+*.sqlite
+*.sqlite-journal
+.local/
+
+# BMAD / agent scratch (keep planning artifacts tracked when intentional)
+_bmad-output/**/*.tmp
+_bmad-output/**/.memlog.md
+
+# Test / tool caches
+.cache/
+playwright-report/
+test-results/
