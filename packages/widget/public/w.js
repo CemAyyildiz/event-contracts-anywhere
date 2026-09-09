@@ -30,7 +30,7 @@
   iframe.title = "Event Contracts widget";
   iframe.allow = "clipboard-write";
   iframe.style.cssText =
-    "width:100%;border:0;border-radius:12px;overflow:hidden;display:block;min-height:360px;background:#0e1114;";
+    "width:100%;border:0;border-radius:16px;overflow:hidden;display:block;min-height:420px;background:transparent;box-shadow:0 18px 50px rgba(8,10,14,0.28);";
   wrap.appendChild(iframe);
 
   s.parentNode.insertBefore(wrap, s);

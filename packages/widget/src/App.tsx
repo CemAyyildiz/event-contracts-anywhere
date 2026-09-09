@@ -5,6 +5,8 @@ import { MiniChart } from "./MiniChart";
 import { loadBets, pushBet, type BetRecord } from "./history";
 import { useTradeSession } from "./useTradeSession";
 
+const EXPLORER = "https://shannon-explorer.somnia.network/tx/";
+
 function params() {
   const q = new URLSearchParams(window.location.search);
   return {
@@ -21,8 +23,10 @@ function formatPct(p: number | null) {
 function ttlLabel(sec: number | null | undefined) {
   if (sec == null) return "—";
   const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  const s = Math.floor(sec % 60);
+  return m > 0
+    ? `${m}:${s.toString().padStart(2, "0")}`
+    : `0:${s.toString().padStart(2, "0")}`;
 }
 
 type Phase = "idle" | "open" | "settled" | "busy";
@@ -34,23 +38,28 @@ export function App() {
     ? ((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex)
     : undefined;
 
-  const { exchange, market, book, ticks, error, ready, mode, setError } =
+  const { exchange, market, book, ticks, error, ready, setError } =
     useTradeSession(asset, privateKey);
 
   const [size, setSize] = useState<1 | 5 | 25>(1);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [statusText, setStatusText] = useState("Pick Up or Down");
+  const [statusText, setStatusText] = useState("One tap. No wallet setup.");
   const [bets, setBets] = useState<BetRecord[]>(() => loadBets());
   const [showHistory, setShowHistory] = useState(false);
   const [openBet, setOpenBet] = useState<BetRecord | null>(null);
+  const [lastTx, setLastTx] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [probKey, setProbKey] = useState(0);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // postMessage height to embed parent
+  useEffect(() => {
+    setProbKey((k) => k + 1);
+  }, [book.upProb]);
+
   useEffect(() => {
     const report = () => {
       const height = document.documentElement.scrollHeight;
@@ -60,13 +69,12 @@ export function App() {
     const ro = new ResizeObserver(report);
     ro.observe(document.documentElement);
     return () => ro.disconnect();
-  }, [phase, showHistory, statusText, bets.length]);
+  }, [phase, showHistory, statusText, bets.length, lastTx]);
 
   const ttlSec = market
     ? Math.max(0, Math.floor((market.expiryMs - now) / 1000))
     : null;
 
-  // After open: poll settle then redeem
   useEffect(() => {
     if (phase !== "open" || !exchange || !openBet || !market) return;
     let cancelled = false;
@@ -82,12 +90,11 @@ export function App() {
             const red = await redeem(exchange, openBet.marketSymbol);
             if (cancelled) return;
             setPhase("settled");
-            const note =
-              red.redeemed
-                ? `Won · redeemed ${red.amount}`
-                : red.reason === "losing-or-empty"
-                  ? "Settled · this side lost"
-                  : `Settled · ${red.reason ?? "done"}`;
+            const note = red.redeemed
+              ? `Resolved — you won · redeemed ${red.amount}`
+              : red.reason === "losing-or-empty"
+                ? "Resolved — this side lost"
+                : `Resolved · ${red.reason ?? "done"}`;
             setStatusText(note);
             setBets((prev) => {
               const next = prev.map((b) =>
@@ -114,7 +121,7 @@ export function App() {
   async function onTrade(side: "up" | "down") {
     setError(null);
     if (!privateKey) {
-      setStatusText("Set VITE_PRIVATE_KEY for demo trades (burner comes next)");
+      setStatusText("Add VITE_PRIVATE_KEY to enable demo trades");
       return;
     }
     if (!exchange || !market) {
@@ -122,11 +129,12 @@ export function App() {
       return;
     }
     if ((ttlSec ?? 0) <= 60) {
-      setStatusText("Window too close — waiting for next…");
+      setStatusText("Window closing — wait for the next print");
       return;
     }
     setPhase("busy");
-    setStatusText("Sending…");
+    setStatusText("Signing on Shannon…");
+    setLastTx(null);
     try {
       const fill = await buyGuaranteed(exchange, {
         market,
@@ -147,9 +155,10 @@ export function App() {
       };
       setBets(pushBet(bet));
       setOpenBet(bet);
+      setLastTx(fill.txHashes[0] ?? null);
       setPhase("open");
       setStatusText(
-        `Open ${side.toUpperCase()} · ${size} tUSDC · ${fill.path} · live`,
+        `${side === "up" ? "Up" : "Down"} live · ${size} tUSDC · ${fill.path}`,
       );
     } catch (e) {
       setPhase("idle");
@@ -164,27 +173,45 @@ export function App() {
     }
   }
 
+  const canTrade = ready && phase !== "busy" && phase !== "open";
+
   return (
     <div className="shell">
       {!privateKey && (
         <div className="warn-banner">
-          Demo mode: add VITE_PRIVATE_KEY (Shannon STT + faucet) to trade.
+          Demo signer missing — set VITE_PRIVATE_KEY for live taps.
         </div>
       )}
+
       <div className="top">
-        <div className="brand">ECA · {hostId}</div>
-        <div className="ttl">{ttlLabel(ttlSec)} left · {mode}</div>
+        <div className="brand">
+          Anywhere <span>· {hostId}</span>
+        </div>
+        <div className="live">
+          <i aria-hidden />
+          Live
+        </div>
       </div>
 
-      <div className="prob">
-        <strong>{formatPct(book.upProb)}</strong>
-        <span>Up probability · {asset}</span>
+      <div className="hero-prob">
+        <div className="asset">{asset} next window</div>
+        <div className="row">
+          <strong key={probKey}>{formatPct(book.upProb)}</strong>
+          <div className={`ttl-block${(ttlSec ?? 99) < 90 ? " urgent" : ""}`}>
+            <span className="lbl">Expires</span>
+            <span className="val">{ttlLabel(ttlSec)}</span>
+          </div>
+        </div>
       </div>
+
       <div className="book">
-        <span>Bid {book.bid?.toFixed(3) ?? "—"}</span>
-        <span>Ask {book.ask?.toFixed(3) ?? "—"}</span>
+        <span>
+          Bid <b>{book.bid?.toFixed(3) ?? "—"}</b>
+        </span>
+        <span>
+          Ask <b>{book.ask?.toFixed(3) ?? "—"}</b>
+        </span>
       </div>
-      {market && <div className="symbol">{market.upSymbol}</div>}
 
       <MiniChart ticks={ticks} strikeHint={book.mid} />
 
@@ -197,37 +224,61 @@ export function App() {
             onClick={() => setSize(s)}
             disabled={phase === "busy"}
           >
-            {s}
+            {s} tUSDC
           </button>
         ))}
       </div>
 
-      <div className="actions">
+      <div className={`actions${phase === "busy" ? " busy" : ""}`}>
         <button
           type="button"
           className="up"
-          disabled={!ready || phase === "busy" || phase === "open"}
+          disabled={!canTrade}
           onClick={() => void onTrade("up")}
         >
           Up
+          <small>Price goes higher</small>
         </button>
         <button
           type="button"
           className="down"
-          disabled={!ready || phase === "busy" || phase === "open"}
+          disabled={!canTrade}
           onClick={() => void onTrade("down")}
         >
           Down
+          <small>Price goes lower</small>
         </button>
       </div>
 
-      <div className="status">
+      <div className={`status ${phase}`}>
         <div className="label">Status</div>
         <div className="body">{statusText}</div>
+        {lastTx && (
+          <div className="tx">
+            <a href={`${EXPLORER}${lastTx}`} target="_blank" rel="noreferrer">
+              View on Shannon explorer →
+            </a>
+          </div>
+        )}
         {(error || (!ready && !error)) && (
-          <div className="err">{error ?? "Connecting…"}</div>
+          <div className="err">{error ?? "Connecting to Shannon…"}</div>
         )}
       </div>
+
+      {phase === "settled" && (
+        <button
+          type="button"
+          className="drawer-toggle"
+          onClick={() => {
+            setPhase("idle");
+            setOpenBet(null);
+            setLastTx(null);
+            setStatusText("One tap. No wallet setup.");
+          }}
+        >
+          Trade again
+        </button>
+      )}
 
       <button
         type="button"
