@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter @eca/widget build",
+  "outputDirectory": "packages/widget/dist",
+  "rewrites": [
+    { "source": "/demo", "destination": "/demo/index.html" }
+  ]
+}
