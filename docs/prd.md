@@ -1,294 +1,153 @@
 # Event Contracts Anywhere — Product Requirements Document (BMAD)
 
-> BMAD formatı. `docs/prd.md` olarak kullan. Kaynak analiz: `event-contracts-anywhere-PRD.md` (v1.1) + discovery plan.
-> Bağlam: Somnia × DreamDEX Event Contracts Hackathon · Shannon Testnet (chain 50312) · deadline 11 Eylül 2026 21:00.
+> Source of truth for MVP. Supersedes v0.1 where they conflict.  
+> Hackathon: Somnia × DreamDEX Event Contracts · Shannon (50312) · submit 2026-09-11 21:00.
 
 ## Goals and Background Context
 
 ### Goals
-- DreamDEX arayüzüne hiç girmemiş kullanıcılardan, üçüncü-taraf yüzeylere gömülü bir widget üzerinden Shannon testnet'te ölçülebilir Event Contract trade akışı üretmek.
-- İlk-dokunuştan-settle'a: sıfır signup, sıfır cüzdan kurulumu, sıfır gas prompt.
-- Her widget bahsinin order book'a likidite eklediğini on-chain göstermek (`mintSet`-garantili-fill).
-- Host başına doğrulanabilir attribution + otomatik ödeme.
-- 2–3 dakikalık demoda jürinin QR'dan kendi dokunuşuyla canlı fill görmesi.
+- Put a DreamDEX Event Contract **slip on a host’s surface** (web page or chat URL) so readers never open DreamDEX.
+- Attribute volume with `?host=` / `data-host` (payout settlement is post-MVP).
+- Every Up/Down tap hits the live Shannon book (`buyGuaranteed` / mint-sell path).
+- Session wallet is the reader’s EOA; keys stay on device; they fund STT + tUSDC.
+- A 2–3 minute demo: host drop-in → reader fund → fill → explorer.
 
 ### Background Context
-DreamDEX Event Contract marketlerinin büyük çoğunluğu hiç işlem görmüyor ("5.000 marketin %83,5'i sıfır trade"). Sebep ürün değil dağıtım: tek giriş yolu "DreamDEX'e git → cüzdan bağla → Somnia + tUSDC/STT edin → yeni arayüz öğren". Hackathon'a giren ~70 projenin neredeyse tamamı arz tarafı (likidite kasaları, AI agent, fiyatlama, hedge, güvenlik); kimse talep/dağıtım kurmuyor. Event Contracts Anywhere, Event Contracts'ı kullanıcının zaten olduğu kripto yüzeylerine (Telegram, haber sitesi, yayın) gömülebilir bir Up/Down widget'ı olarak taşır; widget'ı gömen host yönlendirdiği hacimden pay alır (prediction bahisleri için Stripe/affiliate modeli). Kapsam DoraHacks etkinlik sayfasına karşı doğrulandı: "consumer-facing trading application" + "social prediction product" kategorilerine giriyor, format kısıtı yok.
+Empty Event Contract books are a **distribution** problem. Anywhere is a paste-in card, not a destination bot and not a news-betting site.
 
 ### Change Log
-| Tarih | Sürüm | Açıklama | Yazar |
-|---|---|---|---|
-| 2026-09-09 | 0.1 | İlk BMAD PRD; analiz dokümanından türetildi | Cem + Claude |
+| Date | Version | Notes |
+|---|---|---|
+| 2026-09-09 | 0.1 | Original BMAD PRD (sponsor + host panel in MVP) |
+| 2026-09-10 | 0.2 | Correct course: embed-first MVP; sponsor/payout/router → post-MVP |
 
 ## Requirements
 
-### Functional
-- **FR1:** Sistem, tarayıcıda üretilen bir burner key ile `@somnia-chain/markets-sdk` üzerinden Somnia Shannon testnet'te gerçek bir DreamDEX Event Contract order'ı yerleştirir.
-- **FR2:** İlk etkileşimde widget, hiçbir signup ekranı veya harici cüzdan prompt'u olmadan bir burner keypair üretip client storage'a şifreli yazar.
-- **FR3:** Resting-order anında dolmuyorsa widget, complete set mint edip (1 tUSDC → 1 Up + 1 Down) istenmeyen bacağı IOC ile order book'a satarak anında yönlü fill garantiler.
-- **FR4:** Sponsor servisi, yeni bir burner adresini adres başına tam bir kez minimal STT (gas) + 1 tUSDC (stake) ile fonlar; host başına/gün ve IP/Telegram-kullanıcı başına rate-limit uygular.
-- **FR5:** Mevcut market son kullanmaya 60 sn'den yakınsa widget otomatik olarak bir sonraki pencerenin marketine geçer.
-- **FR6:** Market settle olduğunda kazanan pozisyonlar kullanıcı aksiyonu olmadan redeem edilir (Reactivity kontratı veya backend watcher fallback).
-- **FR7:** Her order gömen host'a atfedilir: on-chain `RouterAttribution` kontratı `Traded(user, hostId, size, side)` emit ederek, ya da off-chain `burnerAddress→hostId` haritası + settlement indexer ile.
-- **FR8:** Host bir payout adresi register eder ve bir `hostId` ile kopyala-yapıştır embed snippet'i alır (script tag + Telegram Mini App deep link).
-- **FR9:** Host paneli indexer'dan canlı kümülatif yönlendirilen hacim, tekil cüzdan sayısı ve birikmiş kazanç gösterir.
-- **FR10:** Widget tek kod tabanından hem (a) herhangi bir web sayfasına `<script>` ile enjekte edilen iframe hem (b) Telegram Mini App olarak render olur.
-- **FR11:** Widget yalnızca seçili market için canlı odds ve top-of-book'u SDK WebSocket'inden gösterir (REST fallback).
-- **FR12:** Settle sonrası widget çözülen sonucu ve P&L'i gösterir; kullanıcının geçmiş bahislerini lokal tutar.
-- **FR13:** Aynı tarayıcı/Mini App'te dönen kullanıcı aynı burner'ı ve session bakiyesini devralır.
-- **FR14:** Session bakiyesi bitince widget tek seferlik top-up ister (testnet: faucet/sponsor; deposit akışı mainnet/Relay için stub).
+### Functional — MVP
+
+- **FR1:** Browser/TMA session EOA signs `@somnia-chain/markets-sdk` trades on Shannon.
+- **FR2:** First load creates a keypair; persist `localStorage` (web) and Telegram `CloudStorage` when present. Key is never sent to our backend (there is no key backend).
+- **FR3:** `buyGuaranteed` fills even on a thin book (IOC or mintSet + sell unwanted leg).
+- **FR4:** Reader deposits STT (gas) and tUSDC (stake) to the session address. Testnet faucets are the funding path. **No sponsored first bet in MVP.**
+- **FR5:** If the window has ≤60s left, do not open a new position on that market; wait/select successor.
+- **FR6:** After settle, attempt redeem; losing/empty is a no-op with a clear status.
+- **FR7:** Every embed/URL carries `hostId` (`data-host` / `?host=` / `startapp`). Stored on local bet records. On-chain router **not** required for MVP.
+- **FR8:** `/` (landing) gives a copy-paste `<script>` and a chat URL for a chosen host id + market.
+- **FR9:** Widget is one codebase: iframe via `w.js` and the same app at `/` and `/tma`.
+- **FR10:** Live odds + top of book (SDK watch, REST poll fallback).
+- **FR11:** Settled result + local history.
+- **FR12:** Returning user on the same device reuses the same session wallet and balances.
+
+### Functional — post-MVP (backlog)
+
+- **FR-B1:** Sponsor service: once-per-address STT + tUSDC with caps.
+- **FR-B2:** Host register, payout address, fee claim.
+- **FR-B3:** On-chain `RouterAttribution` or indexer-backed host metrics dashboard.
+- **FR-B4:** Discord Activity (beyond a pasteable URL).
+- **FR-B5:** Encrypted key material at rest; export/import wallet.
+- **FR-B6:** Auto-redeem via Reactivity without polling.
 
 ### Non-Functional
-- **NFR1:** Dokunuş→pozisyon-açık gecikmesi Shannon testnet'te p50 ≤ 5 sn.
-- **NFR2:** Burner private key hiçbir backend'e iletilmez; backend yalnız sponsor tx'leri ve okuma API'leri yapar.
-- **NFR3:** Sponsor riski adres başına (1×), host/gün ve IP başına cap'lerle sınırlı; ilk stake ≤ 1 tUSDC.
-- **NFR4:** Widget bundle orta seviye mobil bağlantıda ≤ 2 sn render; SDK import'ları tree-shake'li.
-- **NFR5:** Tüm kontratlar ve widget kaynağı public (MIT); `RouterAttribution` explorer'da verified.
-- **NFR6:** Nazik degradasyon: Reactivity yoksa → watcher; kontrat-route'lu mint yoksa → off-chain attribution; WS yoksa → REST polling.
-- **NFR7:** v1'de mainnet yok, gerçek para yok, KYC yok.
+
+- **NFR1:** Touch → position-open p50 ≤ 5s on Shannon after the wallet is funded.
+- **NFR2:** Private keys never leave the client.
+- **NFR3:** No custodian backend in MVP.
+- **NFR4:** Embed loader stays tiny; SDK stays inside the iframe origin.
+- **NFR5:** MIT; public repo.
+- **NFR6:** WS down → poll; redeem watcher is client-side poll in MVP.
+- **NFR7:** Testnet only. No real money. No KYC.
 
 ## User Interface Design Goals
 
 ### Overall UX Vision
-Tek yüzey, tek karar. Kullanıcı içeriğin akışını bırakmadan bir dokunuşla tahminini koyar ve sonucu görür. Çekirdek döngüde modal yok, cüzdan-bağla ekranı yok.
+The **host’s page or chat** is the product. The slip looks like a betting card (newsprint, condensed type), not a destination DEX. Reader flow: fund → Up/Down → tape.
 
-### Key Interaction Paradigms
-- İki büyük buton: **Up / Down**.
-- Canlı mini grafik + strike çizgisi + güncel Up olasılığı.
-- Boyut seçici (preset: 1 / 5 / 25 tUSDC).
-- Durum alanı: idle → "pozisyon açık + canlı P&L" → "çözüldü: sonuç + P&L".
-- İnce bakiye/geçmiş çekmecesi (drawer).
-
-### Core Screens and Views
-- Widget (embed / Mini App) — tek ekran, 3 durum.
-- Demo "haber makalesi" sayfası (widget gömülü).
-- Host paneli: register → embed kodu → canlı metrikler.
-
-### Accessibility
-Yok (hackathon). Kontrast ve dokunma hedef boyutuna dikkat.
+### Core screens
+- `/home` — how it is used (host vs reader) + take-the-slip (snippet + URL) + live preview.
+- `/demo` — slip inside a page (proof of embed).
+- Widget: fund (address, balances, faucets) → trade (odds, stake, Up/Down, tape, history).
+- `/tma` — same widget when a chat URL is opened in Telegram (plumbing).
 
 ### Branding
-Karanlık tema varsayılan. Minimal, "gömüldüğü yere yakışan" nötr stil. Somnia/DreamDEX değil, host içeriğiyle uyum önceliği.
+Newsprint / tote-slip. Not dark-crypto gradient. Not “open our bot”.
 
-### Target Device and Platforms
-Web Responsive; birincil hedef mobil (320px, Telegram Mini App) + ~360×480 iframe.
+### Devices
+Responsive web; iframe ~28rem; Telegram WebView full-bleed.
 
 ## Technical Assumptions
 
-### Repository Structure: Monorepo
-pnpm workspaces.
+### Repo
+pnpm monorepo: `packages/trade-core`, `packages/widget`. Vercel static from `packages/widget/dist`.
 
-### Service Architecture
-- `packages/trade-core` — SDK sarmalayıcı (client factory, market seçimi, mintSet-garantili-fill, redeem).
-- `packages/widget` — React + Vite; SDK'yi **client-side** burner key ile çalıştırır; embed loader (`w.js`).
-- `packages/contracts` — Foundry; `RouterAttribution` (+ opsiyonel Reactivity redeem).
-- `apps/sponsor` — Node (Hono/Express); ilk-bahis fonlama + cap'ler.
-- `apps/indexer` — Node + viem log subscription; per-host agregasyon; SQLite/Postgres.
-- `apps/dashboard` — Next.js; host register + metrikler.
-- Hosting: widget + dashboard → Vercel; sponsor + indexer → Railway.
+### Explicitly not in MVP tree
+`apps/sponsor`, `apps/indexer`, `apps/dashboard`, `packages/contracts`.
 
-### Testing Requirements
-- `trade-core`: bir entegrasyon testi tam turu Shannon'da geçirir (`fund → mintSet → trade → redeem`).
-- `contracts`: `RouterAttribution` için Foundry unit testleri.
-- Başka test yok; CI yok; manuel deploy.
+### Stack
+TypeScript, React, Vite, `@somnia-chain/markets-sdk` ^0.29.0, viem. Shannon RPC `https://dream-rpc.somnia.network`.
 
-### Additional Technical Assumptions and Requests
-- TypeScript her yerde; Solidity kontratlar.
-- Testnet: `NETWORK=testnet`, chain `50312`, RPC `https://dream-rpc.somnia.network`, REST `https://stg.api.dreamdex.io/v0`, WS `wss://stg.api.dreamdex.io/v0/ws/public`. Faucet `testnet.somnia.network`.
-- `@somnia-chain/markets-sdk` ^0.29.0 + `viem`.
-- Gas sponsorluğu: burner adresi ufak STT ile önceden beslenir (SDK meta-tx desteklemiyorsa forwarder yok).
-- `createOrder(symbol, "limit", side, amount, price, { timeInForce: "IOC" })`; fiyat = Up olasılığı (0,1).
-- **Açık teyitler (Epic 1 spike):** (a) Shannon'da canlı çözülen BTC/ETH kısa-pencere EC marketi var mı; (b) bir kontrat binary-pool ABI'de funder adına mint/trade edebiliyor mu; (c) Reactivity Shannon'da erişilebilir mi.
+### Testing
+`pnpm spike:markets`, `pnpm trade:smoke` (funded key). Manual widget QA. No CI requirement for submit.
 
 ## Epic List
 
-1. **Epic 1 — Testnet Trade Core & Spike Doğrulama:** Shannon EC ortamını doğrula ve `fund→mintSet-fill→redeem`'i yeniden kullanılabilir bir modül olarak kur. *Deployable: gerçek bir EC trade'ini açıp settle eden CLI.*
-2. **Epic 2 — Gömülebilir Up/Down Widget (web):** Canlı market görünümü + Up/Down + durum/sonuç + `<script>` embed + demo sayfası. *Deployable: ilk kez gelen birinin trade edebildiği hosted widget.*
-3. **Epic 3 — Sıfır-Kurulum Onboarding:** Burner cüzdan + sponsor servisi (ilk-bahis fonlama) + Telegram Mini App. *Deployable: Telegram içinden sıfır kurulumla trade.*
-4. **Epic 4 — Host Attribution & Panel:** RouterAttribution (veya off-chain fallback) + indexer + register/embed/canlı-kazanç paneli. *Deployable: host register olur, embed kodu alır, kazancını canlı görür.*
-5. **Epic 5 (stretch) — Auto-Settlement, Pilot & Demo Cilası:** Reactivity auto-redeem, pilot sayaçları, 2–3 gerçek gruba deploy, demo videosu + feedback raporu.
+### MVP (hackathon)
+
+1. **Epic 1 — Trade core** — Shannon EC + `buyGuaranteed` + redeem. *CLI smoke.*
+2. **Epic 2 — Embeddable slip** — `w.js`, live book, Up/Down, history, `/demo`.
+3. **Epic 3 — Session wallet & host drop-in** — on-device EOA, self-fund, `/home` snippet+URL, TMA as URL shell.
+
+### Post-MVP (backlog)
+
+4. **Epic 4 — Host economics** — register, indexer or router, payouts, dashboard.
+5. **Epic 5 — Pilot & submit polish** — video, BUIDL, real host installs, Discord Activity, sponsor (optional).
 
 ---
 
-## Epic 1 — Testnet Trade Core & Spike Doğrulama
+## Epic 1 — Trade core
 
-**Genişletilmiş hedef:** Tüm mimari 3 doğrulamaya dallanıyor. Bu epic önce onları kesin sonuca bağlar, sonra widget'ın çekirdek trade mantığını (`trade-core`) izole, test edilebilir bir paket olarak üretir. Bitişte: komut satırından gerçek bir Shannon EC pozisyonu açılıp settle edilebiliyor.
+**Status: done** (Story 1.5 deferred).
 
-### Story 1.1 — Spike: Shannon EC ortamını doğrula
-As a builder, I want to confirm a live, resolving Event Contract market exists on Shannon, so that the whole "testnet prototype" premise is validated before I build.
-**AC:**
-1. `pnpm spike:markets` script'i `loadMarkets(true)` + WS ile ≥1 aktif binary market'i time-to-expiry ile yazdırır.
-2. En az bir BTC veya ETH kısa-pencere marketinin açılıp ~dakikalar içinde settle olduğu gözlemlenir ve `docs/spike.md`'ye kaydedilir.
-3. Canlı EC marketi bulunamazsa: dev Telegram'a soru gönderilir, `docs/spike.md`'de GO/NO-GO ve alternatif ("read-only mainnet + testnet tx") not edilir.
+- 1.1 Spike Shannon EC — done (`docs/spike.md` GO).
+- 1.2 `createExchange` + `getTradeableMarket` — done.
+- 1.3 `buyGuaranteed` — done.
+- 1.4 `redeem` including losing no-op — done.
+- 1.5 Contract-routed mint spike — **backlog**.
 
-### Story 1.2 — trade-core: SDK client factory + market seçimi
-As a developer, I want a helper that returns the nearest tradeable window, so that a tap always lands in a valid market.
-**AC:**
-1. `createExchange(env)` yapılandırılmış `SomniaMarkets` döner (indexerUrl, chain, wsRpc, addresses, privateKey).
-2. `getTradeableMarket(asset)` >60 sn kalan aktif binary market döner; yoksa successor'ı seçer.
-3. Smoke çalıştırması bir market id + Up sembolü + top-of-book yazdırır.
+## Epic 2 — Embeddable slip
 
-### Story 1.3 — trade-core: mintSet-garantili-fill alım
-As a user, I want my directional bet to fill instantly even in a thin book, so that I don't bounce.
-**AC:**
-1. `buyGuaranteed({ market, side, sizeUsdc })` verilen tarafta net pozisyon açar.
-2. Kitap yeterince derinse düz limit-IOC yolu kullanılır; değilse `mintSet` → istenmeyen bacağı IOC sat yolu kullanılır.
-3. Fonksiyon net pozisyon + tüm tx hash'lerini döner; explorer'da doğrulanır.
-4. Yetersiz bakiye / market kapalı durumları anlamlı hata döner.
+**Status: done** for hackathon bar.
 
-### Story 1.4 — trade-core: settle sonrası redeem
-As a user, I want winnings claimed automatically, so that I never touch a claim button.
-**AC:**
-1. `redeem(market)` settle olmuş kazanan pozisyonu holder'a öder, payout döner.
-2. Kaybeden/settle olmamış pozisyonda no-op + net durum döner.
-3. Entegrasyon testi `fund→buyGuaranteed→(settle bekle)→redeem` turunu Shannon'da geçer.
+- 2.1 `w.js` iframe + host/market — done.
+- 2.2 Live odds/book/countdown — done.
+- 2.3 Up/Down + size → trade-core — done (session key, not env key).
+- 2.4 Settle tape + local history — done.
+- 2.5 Demo page as embed proof (not news-hero) — done.
 
-### Story 1.5 — Spike: kontrat-route'lu mint fizibilitesi
-As an architect, I want to know if a contract can mint/trade on a funder's behalf, so that I choose on-chain vs off-chain attribution.
-**AC:**
-1. `packages/contracts/solidity` binary-pool ABI incelenir; bir kontratın funder adına set mint edip pozisyon tutabildiği bir minimal Foundry testiyle denenir.
-2. Sonuç (`RouterAttribution` mümkün / off-chain fallback gerekli) `docs/spike.md`'ye yazılır.
-3. Reactivity'nin Shannon'da erişilebilirliği aynı dokümanda not edilir.
+## Epic 3 — Session wallet & host drop-in
 
----
+**Status: in progress → treat as done except submit assets.**
 
-## Epic 2 — Gömülebilir Up/Down Widget (web)
+- 3.1 Session EOA, localStorage / CloudStorage — done (plaintext at rest; encrypt = backlog).
+- 3.2 Self-fund UI + faucets — done. **Sponsor story cancelled for MVP.**
+- 3.3 `/home` how-to + snippet + chat URL — done.
+- 3.4 `/tma` same widget; `startapp`/`?host=` — done as plumbing.
+- 3.5 Backup/export key in-widget — done (rough).
 
-**Genişletilmiş hedef:** `trade-core`'u saran, tek ekranlı, üçüncü-taraf bir sayfaya `<script>` ile gömülebilen web widget'ı. Bu epicte cüzdan bir env key ile stub'lanır (gerçek burner Epic 3). Bitişte: bir demo "haber" sayfasında widget'tan testnet'te pozisyon açılıp sonucu görülüyor.
+## Epic 4 — Host economics — backlog
 
-### Story 2.1 — Widget iskeleti + embed loader
-**AC:**
-1. `<script src=".../w.js" data-host data-market>` boş bir sayfaya widget iframe'i enjekte eder.
-2. iframe boyutu postMessage ile içerik yüksekliğine ayarlanır.
-3. `data-host` ve `data-market` widget'a geçer; eksikse anlamlı fallback.
+Former 4.1A/B, 4.2, 4.3 payout panel, 4.4 live metrics.
 
-### Story 2.2 — Canlı market görünümü
-**AC:**
-1. Widget seçili market için güncel Up olasılığını ve top-of-book'u gösterir, WS tick'lerinde güncellenir.
-2. Mini fiyat grafiği + strike çizgisi + pencere geri sayımı render olur.
-3. WS koparsa REST polling'e düşer ve reconnect dener.
+MVP substitute: host id on snippet/URL only.
 
-### Story 2.3 — Up/Down + boyut → trade-core
-**AC:**
-1. Boyut presetleri (1/5/25) seçilebilir.
-2. Up'a dokunmak (env key ile) demo sayfasından Shannon'da pozisyon açar.
-3. Durum alanı "pozisyon açık" + canlı P&L gösterir; pencere <60 sn ise successor'a geçilir.
-4. Hata durumları kullanıcıya sade mesajla döner.
+## Epic 5 — Pilot & submit — backlog / remaining
 
-### Story 2.4 — Sonuç durumu + lokal geçmiş
-**AC:**
-1. Settle sonrası widget çözülen sonucu ve P&L'i gösterir.
-2. Geçmiş bahisler localStorage'da tutulur ve çekmecede listelenir.
-3. Sayfa yenilenince geçmiş ve son durum geri gelir.
-
-### Story 2.5 — Demo web sayfası
-**AC:**
-1. Sahte "kripto haber makalesi" sayfası deploy edilir, widget makale içine gömülü.
-2. Public URL çalışır ve mobilde düzgün render olur.
-
----
-
-## Epic 3 — Sıfır-Kurulum Onboarding
-
-**Genişletilmiş hedef:** Env key stub'ını gerçek, tarayıcıda üretilen burner cüzdanla değiştir; ilk bahsi sponsor servisiyle fonla; aynı widget'ı Telegram Mini App olarak paketle. Bitişte: temiz bir tarayıcı profili / Telegram'dan, hiçbir kurulum olmadan bahis açılıp settle oluyor.
-
-### Story 3.1 — Burner cüzdan modülü
-**AC:**
-1. İlk yükleme bir keypair üretir, şifreler, `localStorage` (web) + Telegram `CloudStorage` (TMA) yazar.
-2. Yeniden yükleme aynı burner'ı devralır.
-3. Key hiçbir ağ isteğinde gönderilmez; sadece `trade-core`'a in-memory verilir.
-
-### Story 3.2 — Sponsor servisi
-**AC:**
-1. `POST /sponsor {burnerAddr, hostId}` yeni adrese bir kez STT + 1 tUSDC gönderir, tx hash döner.
-2. Aynı adrese ikinci çağrı reddedilir.
-3. Host/gün ve IP başına cap aşılırsa 429 döner.
-4. Faucet cüzdanı ve cap'ler env ile yapılandırılır; bakiye düşükse alarm log'u.
-
-### Story 3.3 — İlk-dokunuş akışını bağla
-**AC:**
-1. Yeni kullanıcı Up'a dokunur → burner üretilir → `/sponsor` çağrılır → `buyGuaranteed` → pozisyon; hiçbir modal veya signup yok.
-2. Temiz tarayıcı profilinde dokunuş→pozisyon ≤ ~15 sn.
-3. Sponsor reddederse (cap) kullanıcıya "tek seferlik ücretsiz bahis doldu, yükle" mesajı.
-
-### Story 3.4 — Telegram Mini App sarmalayıcı
-**AC:**
-1. TMA linki (`t.me/<bot>/app?startapp=<hostId>`) widget'ı Telegram içinde açar.
-2. `startapp`'ten `hostId` parse edilir.
-3. Burner Telegram `CloudStorage`'da kalıcı; TMA içinden Shannon'da trade çalışır.
-
-### Story 3.5 — Session bakiyesi + tükeniş prompt'u
-**AC:**
-1. Bakiye = sponsor + kazançlar − stake'ler; widget'ta görünür.
-2. Bakiye 0 olunca tek seferlik top-up prompt'u (deposit akışı stub).
-3. Top-up stub'ı testnet faucet/sponsor çağrısına bağlı (varsa).
-
----
-
-## Epic 4 — Host Attribution & Panel
-
-**Genişletilmiş hedef:** Widget'tan geçen her trade'i gömen host'a bağla ve host'un kazancını görüp embed kodu alacağı paneli kur. Epic 1.5 sonucuna göre A (on-chain) veya B (off-chain) kolu.
-
-### Story 4.1A — RouterAttribution kontratı (on-chain kolu)
-**AC:**
-1. `registerHost(payout) → hostId`, `routeBuy(hostId, market, side, sizeUsdc, maxPrice)`, `claimHostFees(hostId)`.
-2. `routeBuy`: tUSDC çek → mint → istenmeyen bacağı sat → (ops) `feeBps` kes → `emit Traded(user, hostId, size, side)`.
-3. Foundry testleri geçer; Shannon'a deploy + explorer'da verified.
-4. `routeBuy` net pozisyonu `trade-core.buyGuaranteed` ile aynı sonucu verir.
-
-### Story 4.1B — Off-chain attribution (fallback kolu)
-**AC:**
-1. Burner oluşturulurken backend `burnerAddr→hostId` kaydeder.
-2. Indexer o adreslerin settle olan hacmini host'a toplar.
-3. 2 host'a dağıtılmış N test trade'inde per-host hacim doğru raporlanır.
-
-### Story 4.2 — Indexer
-**AC:**
-1. `Traded` loglarına subscribe (kol B'de burner fill'lerini tarar), per-host hacim/cüzdan/kazanç agregasyonu.
-2. Dashboard API per-host metrikleri döner, ~1 blok/poll içinde güncellenir.
-3. Yeniden başlatmada son işlenen bloktan devam eder.
-
-### Story 4.3 — Host register + embed kodu
-**AC:**
-1. Host cüzdan bağlar → register → `hostId` alır.
-2. Panel çalışan bir snippet verir: `<script>` + TMA linki, `hostId` gömülü.
-3. Kopyalanan snippet boş bir sayfada host'a atıflı widget'ı render eder.
-
-### Story 4.4 — Panel canlı metrikler
-**AC:**
-1. Kümülatif yönlendirilen hacim, tekil cüzdan, birikmiş kazanç gösterilir ve yenilenir.
-2. Değerler indexer ile tutarlı.
-3. Son işlemler listesi (zaman, boyut, sonuç).
-
----
-
-## Epic 5 (stretch) — Auto-Settlement, Pilot & Demo Cilası
-
-### Story 5.1 — Reactivity auto-redeem + watcher fallback
-**AC:** Kazanan pozisyon settle'dan sonra kullanıcı aksiyonu olmadan redeem olur; Reactivity yoksa watcher servisi yapar; ikisi de log'lar.
-
-### Story 5.2 — Pilot enstrümantasyonu
-**AC:** Public `/stats` endpoint'i toplam trade, tekil cüzdan, %ilk-kez döner; demo ekranı bu kümülatif sayıları gösterir.
-
-### Story 5.3 — Gerçek gruplara deploy
-**AC:** Widget 2–3 gerçek Telegram grubuna/sayfaya konur; ≥1 harici gerçek kullanıcı trade eder; sayılar yakalanır.
-
-### Story 5.4 — Demo videosu + feedback raporu
-**AC:** 2–3 dk demo videosu (problem → tek dokunuş → on-chain kanıt → host paneli → roadmap) kaydedilir; SDK/dok feedback raporu build notlarından yazılır; BUIDL submit edilir.
-
----
+- 5.1 Auto-redeem without client poll — backlog.
+- 5.2 Public stats — backlog.
+- 5.3 Real host installs — backlog.
+- 5.4 Demo video + BUIDL — **required to submit, not built.**
 
 ## Next Steps
 
-### Architect Prompt
-"`docs/prd.md`'yi al ve `docs/architecture.md` üret. Monorepo (pnpm), `packages/trade-core|widget|contracts` + `apps/sponsor|indexer|dashboard`. Kritik: (1) `@somnia-chain/markets-sdk`'nin client-side burner key ile çalıştırılması ve bundle boyutu; (2) `mintSet`-garantili-fill algoritması (kitap derinliği eşiği, kayma, iade muhasebesi); (3) Epic 1.5 sonucuna göre `RouterAttribution` kontrat arayüzü veya off-chain attribution şeması; (4) sponsor servisi cap/anti-abuse; (5) Reactivity veya watcher ile auto-redeem. Testnet endpoint'leri Technical Assumptions'ta."
-
-### UX Prompt
-"Tek ekran, üç durum (idle / pozisyon açık / çözüldü), 320px + iframe. Up/Down iki büyük buton, mini grafik + strike, boyut presetleri, ince bakiye/geçmiş çekmecesi. Çekirdek döngüde modal yok, cüzdan-bağla yok. Karanlık tema, host içeriğiyle uyumlu nötr stil."
-
-### BMAD çalıştırma notu (2 gün — sıkıştırılmış seremoni)
-1. `docs/prd.md` (bu) + `docs/architecture.md` (architect) hazır olsun.
-2. `@po` ile shard: `docs/epics/*`, `docs/stories/*`.
-3. Epic 1'i tam BMAD döngüsüyle koştur (`@sm` draft → `@dev` → hızlı manuel QA). Spike'lar (1.1, 1.5) önce.
-4. Epic 2–4: story başına `@dev`, QA'i manuel demo ile birleştir; her story sonunda deploy edilebilir tut.
-5. Epic 5 zaman kalırsa.
+1. Record demo: `/home` how-to → copy snippet → `/demo` or URL → fund → Up/Down → explorer.
+2. Submit DoraHacks BUIDL with those URLs.
+3. After deadline: Epic 4 if hosts need payouts; optional sponsor for one-tap.

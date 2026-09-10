@@ -1,47 +1,46 @@
 # Pitch Deck Outline — Event Contracts Anywhere
 
-**Length:** 8 slides · **Demo:** `/home` + `/tma` + explorer tx
+**Length:** 8 slides · **Demo:** `/home` snippet → `/demo` embed → live fill
 
 ## Slide 1 — Title
 **Event Contracts Anywhere**  
-DreamDEX Event Contracts where people already are — Telegram first.  
+The DreamDEX slip, on someone else’s page.  
 Somnia × DreamDEX Hackathon · Shannon testnet
 
 ## Slide 2 — Problem
-- Event Contracts exist; the funnel to trade them is long
-- Today: leave the chat → open DreamDEX → connect wallet → fund → learn UI
-- Distribution is the missing layer, not another chart
+- Event Contracts exist; the funnel is “leave and open DreamDEX”
+- Empty books are a distribution problem
+- Destinations don’t get readers who already have a feed
 
 ## Slide 3 — Solution
-- Telegram Mini App (`/tma`) + embeddable widget
-- **Session wallet** created on device — address is yours
-- User deposits STT + tUSDC; Up/Down hits the real book
-- Keys in localStorage / Telegram CloudStorage — never our backend
+- One widget, two drop-ins: `<script>` on the web, URL in a chat
+- `?host=` / `startapp` attributes the fill to the surface
+- Session wallet on device; keys never hit our backend
+- Up/Down hits the live Shannon book
 
 ## Slide 4 — Live product
-- Home → Mini App → deposit → trade → Shannon explorer
-- Host attribution via `startapp` / `?host=`
-- Backup / export private key in-app
+- `/home` — copy snippet + drop-in URL
+- `/demo` — slip inside a page
+- Same card in Telegram when the URL is opened there (not a bot destination)
 
 ## Slide 5 — Why it matters
-- Brings traders who never open DreamDEX
-- Channels become distribution (affiliate-ready host ids)
+- Traders who never open DreamDEX
+- Every publisher / channel is a desk
 - Direct lift to Event Contract activity
 
 ## Slide 6 — Architecture
-- `trade-core` (SDK) · `widget` (TMA + embed)
-- Invariant: private keys never leave the client
-- Mainnet: same UX, faucet → real deposit rails
+- `trade-core` (SDK) · `widget` (iframe + TMA shell)
+- Invariant: private keys stay on the client
+- Mainnet: same slip, real deposit rails
 
 ## Slide 7 — Proof
 - Shannon short-window BTC/ETH markets verified
 - End-to-end fill (`buyGuaranteed`)
-- Live: vercel `/home` `/tma` · GitHub · SDK feedback
+- Live: `/home` `/demo` · GitHub · SDK feedback
 
 ## Slide 8 — Next
-1. Live Telegram channels  
-2. Discord surface  
+1. Host payout claims  
+2. Discord drop-in  
 3. Mainnet cutover  
-4. Host payout claims  
 
-**Links:** GitHub · https://event-contracts-anywhere.vercel.app/home/ · Demo video
+**Links:** GitHub · https://event-contracts-anywhere.vercel.app/home/

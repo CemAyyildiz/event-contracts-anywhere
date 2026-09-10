@@ -1,33 +1,33 @@
 # Event Contracts Anywhere — Architecture
 
-> Hackathon MVP (≤2 gün). Kaynak: `docs/prd.md` v0.1.  
-> Network: Shannon testnet · chain `50312` · `NETWORK=testnet`.  
-> Status: draft for build · 2026-09-09
+> Hackathon MVP. Source: `docs/prd.md` **v0.2** (correct course 2026-09-10).  
+> Network: Shannon testnet · chain `50312`.  
+> Status: **MVP = client-only** (`trade-core` + `widget`). Sponsor, indexer, dashboard, contracts are **post-MVP**.
+
+## 0. Correct course (2026-09-10)
+
+Shipped path: host drops `w.js` or a `/?host=` URL → session EOA on device → **reader funds** STT + tUSDC → `buyGuaranteed` on Shannon.
+
+**Not MVP:** `POST /sponsor`, `RouterAttribution`, host payout dashboard. Diagrams below that still mention those apps describe the **backlog** shape, not what is deployed.
 
 ## 1. Paradigm
 
-**Client-signed burner trades + thin sponsor/read backends.**
+**Client-signed session trades. No custody backend in MVP.**
 
-- Signing and trading happen in the browser (or TMA WebView) with a local burner key.
-- Backends never see private keys: they only fund once, index attribution, and serve host metrics.
-- Thin-book fills are guaranteed by `mintSet` + IOC sell of the unwanted leg (`buyGuaranteed`).
-- Attribution is **dual-path**: on-chain `RouterAttribution` **or** off-chain `burner→hostId` map — chosen by Epic 1.5 spike.
+- Signing happens in the browser / TMA WebView with a local session EOA.
+- Keys never leave the client. There is no sponsor service in production.
+- Thin-book fills: `mintSet` + IOC sell of the unwanted leg (`buyGuaranteed`).
+- Attribution in MVP: `hostId` query/script attribute + local bet records. On-chain router is Path A **later**.
 
 ```mermaid
 flowchart LR
-  HostPage["Host page / TMA"] --> Loader["w.js"]
+  HostPage["Host page / chat URL"] --> Loader["w.js"]
   Loader --> Widget["packages/widget"]
   Widget --> TradeCore["packages/trade-core"]
-  Widget --> Sponsor["apps/sponsor"]
   TradeCore --> SDK["@somnia-chain/markets-sdk"]
   SDK --> Chain["Shannon 50312"]
-  SDK --> IndexerGQL["SDK indexer / WS"]
-  Widget -.->|"Path A"| Router["RouterAttribution"]
-  Widget -.->|"Path B"| AttrAPI["sponsor/indexer map"]
-  Router --> Chain
-  IndexerApp["apps/indexer"] --> Chain
-  IndexerApp --> DB[(SQLite)]
-  Dashboard["apps/dashboard"] --> IndexerApp
+  Reader["Reader"] --> Faucet["STT / tUSDC faucet"]
+  Faucet --> Chain
 ```
 
 ## 2. Monorepo layout
@@ -137,25 +137,23 @@ SDK is large (live store + GraphQL + ABIs + optional React/reactivity peers).
 | Embed | `w.js` is tiny (~2 KB): creates iframe → loads widget URL with `?host=&market=`. Heavy SDK stays inside iframe origin. |
 | Budget | First paint shell ≤2 s mid-mobile; SDK chunk may load after shell. Measure with `vite-bundle-visualizer` once. |
 
-### Sequence (first tap)
+### Sequence (funded tap)
 
 ```mermaid
 sequenceDiagram
-  participant U as User
+  participant U as Reader
   participant W as Widget
-  participant S as Sponsor
   participant T as trade-core
   participant C as Shannon
 
   U->>W: Up / Down
-  W->>W: ensureBurner()
-  W->>S: POST /sponsor {burnerAddr, hostId}
-  S->>C: STT + 1 tUSDC (once)
-  S-->>W: tx hashes
+  W->>W: session EOA already funded
   W->>T: buyGuaranteed(...)
   T->>C: IOC and/or mintSet+sell
   T-->>W: position + hashes
 ```
+
+First visit: fund screen (copy address → faucet STT → faucet tUSDC) then the sequence above. **No sponsor POST in MVP.**
 
 ## 5. Critical design #2 — `mintSet`-garantili-fill (`buyGuaranteed`)
 

@@ -1,28 +1,29 @@
 # Product lock — Event Contracts Anywhere
 
-**Locked:** 2026-09-10
+**Locked:** 2026-09-10 · **PRD:** `docs/prd.md` v0.2
 
 ## Thesis
 
-Make **DreamDEX Event Contracts** reachable where people already are — **Telegram first**, Discord next — without forcing users through the DreamDEX web funnel.
+DreamDEX Event Contracts as a **slip on someone else’s surface**. The host’s place is the product. We are not a destination bot.
 
 ## User model
 
-1. Open in Telegram (Mini App) or web `/tma`
-2. App **creates a session wallet** (EOA) — address is yours
-3. You **deposit** STT (gas) + tUSDC (stake) to that address
-4. Trade Up/Down on Shannon; PnL settles to **your** address
-5. Keys stay on device (localStorage / Telegram CloudStorage) — never sent to our backend
+1. Host pastes a script tag or a `/?host=` URL
+2. Reader sees the slip on that surface
+3. Session wallet on device; they fund STT + tUSDC
+4. Up/Down hits the live book; PnL on their address
 
-## Not the product
+## Not MVP
 
-- News-article betting as the hero story
-- Shared demo hot wallet as the real UX
-- Sponsored “free play with invisible custody” as the core
-- Mandatory MetaMask connect (optional import later)
+- Sponsored invisible first bet
+- Host payout panel / indexer
+- “Come to our Telegram bot”
+- News-article betting as the whole story
+- Mandatory MetaMask
 
 ## Surfaces
 
-- `/home` — product thesis
-- `/tma` — Mini App entry
-- `/` — embeddable widget
+- `/` — landing (how it is used + snippet)
+- `/demo` — slip inside a page
+- `/slip` — the widget
+- `/tma` — same widget in Telegram WebView
