@@ -19,8 +19,6 @@ import {
 
 const EXPLORER_TX = "https://shannon-explorer.somnia.network/tx/";
 const EXPLORER_ADDR = "https://shannon-explorer.somnia.network/address/";
-const FAUCET = "https://testnet.somnia.network/";
-const TUSDC_HINT = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E";
 
 function params() {
   const q = new URLSearchParams(window.location.search);
@@ -28,6 +26,7 @@ function params() {
     hostId: q.get("host") || "anonymous",
     asset: (q.get("market") || "BTC").toUpperCase(),
     surface: q.get("surface") || "web",
+    peek: q.get("peek"),
   };
 }
 
@@ -56,7 +55,6 @@ export function App() {
   const [wallet, setWallet] = useState<SessionWallet | null>(null);
   const [screen, setScreen] = useState<Screen>("boot");
   const [isTelegram, setIsTelegram] = useState(false);
-  const [userLabel, setUserLabel] = useState<string | null>(null);
   const [bal, setBal] = useState<{
     sttLabel: string;
     tusdcLabel: string;
@@ -66,6 +64,7 @@ export function App() {
   const [copied, setCopied] = useState<"addr" | "key" | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [isNewWallet, setIsNewWallet] = useState(false);
+  const [fauceting, setFauceting] = useState(false);
 
   const privateKey = wallet?.privateKey as Hex | undefined;
   const { exchange, market, book, ticks, error, ready, setError } =
@@ -90,7 +89,6 @@ export function App() {
       if (cancelled) return;
       const tg = initTelegram();
       setIsTelegram(tg.isTelegram || base.surface === "tma");
-      setUserLabel(tg.userLabel);
       if (tg.startHost) setHostId(tg.startHost);
 
       const before = localStorage.getItem("eca.session.wallet.v1");
@@ -98,7 +96,7 @@ export function App() {
       if (cancelled) return;
       setIsNewWallet(!before);
       setWallet(w);
-      setScreen("fund");
+      setScreen(base.peek === "trade" ? "trade" : "fund");
     })();
     return () => {
       cancelled = true;
@@ -167,7 +165,7 @@ export function App() {
     if (fundedEnough) {
       setTelegramMainButton({ text: "Trade Up / Down", onClick: goTrade });
     } else {
-      setTelegramMainButton(null);
+      setTelegramMainButton({ text: "Get faucet", onClick: () => void getFaucet() });
     }
     return () => setTelegramMainButton(null);
   }, [screen, isTelegram, fundedEnough]);
@@ -217,19 +215,43 @@ export function App() {
     };
   }, [phase, exchange, openBet, market, wallet]);
 
-  async function claimFaucetTusdc() {
-    if (!exchange || !wallet) return;
-    setStatusText("Requesting tUSDC faucet…");
+  async function getFaucet() {
+    if (!wallet || fauceting) return;
+    setFauceting(true);
+    setError(null);
+    setStatusText("Sending 0.01 STT + 1 tUSDC…");
     try {
-      const f = await exchange.trader.faucet();
-      setLastTx(f.hash);
-      setStatusText("tUSDC faucet sent");
+      const res = await fetch("/api/faucet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: wallet.address }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        skipped?: boolean;
+        error?: string;
+        sttHash?: string;
+        tusdcHash?: string;
+      };
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Faucet failed");
+      }
+      setLastTx(data.tusdcHash ?? data.sttHash ?? null);
+      setStatusText(
+        data.skipped ? "Already funded" : "Faucet sent — one tap worth",
+      );
       tgHaptic("success");
-      await refreshBal(wallet.address);
+      const next = await refreshBal(wallet.address);
+      if (next && next.stt > 0n && next.tusdc > 0n) {
+        setScreen("trade");
+        setStatusText("Pick Up or Down — PnL settles to your address.");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      setStatusText("Faucet failed — need STT gas first");
+      setStatusText("Faucet failed");
       tgHaptic("error");
+    } finally {
+      setFauceting(false);
     }
   }
 
@@ -308,8 +330,7 @@ export function App() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const canTrade =
-    ready && phase !== "busy" && phase !== "open" && fundedEnough;
+  const canTrade = ready && phase !== "busy" && phase !== "open";
 
   const stepStt = bal != null && bal.stt > 0n;
   const stepTusdc = bal != null && bal.tusdc > 0n;
@@ -317,10 +338,13 @@ export function App() {
   if (screen === "boot" || !wallet) {
     return (
       <div className="shell">
-        <div className="brand">Anywhere</div>
-        <div className="status">
-          <div className="label">Session</div>
-          <div className="body">Creating your wallet on this device…</div>
+        <header className="mast">
+          <div className="mark">Anywhere</div>
+          <div className="tag">Shannon</div>
+        </header>
+        <div className="tape">
+          <div className="label">Slip</div>
+          <div className="body">Printing your address on this device…</div>
         </div>
       </div>
     );
@@ -329,126 +353,93 @@ export function App() {
   if (screen === "fund") {
     return (
       <div className="shell">
-        <div className="top">
-          <div className="brand">
-            Anywhere{" "}
-            <span>· {isTelegram ? userLabel || "Telegram" : "Web"}</span>
+        <header className="mast">
+          <div className="mark">
+            Anywhere
+            <span>via {hostId}</span>
           </div>
-          <div className="live">
-            <i aria-hidden />
-            Shannon
-          </div>
-        </div>
+          <div className="tag">Shannon</div>
+        </header>
 
         <ol className="steps">
-          <li className="done">
-            <b>1</b> Wallet created
-          </li>
-          <li className={stepStt && stepTusdc ? "done" : "on"}>
-            <b>2</b> Deposit
-          </li>
-          <li className={fundedEnough ? "done" : ""}>
-            <b>3</b> Trade
-          </li>
+          <li className="done">1 Wallet</li>
+          <li className="bar" aria-hidden />
+          <li className={stepStt && stepTusdc ? "done" : "on"}>2 Fund</li>
+          <li className="bar" aria-hidden />
+          <li className={fundedEnough ? "done" : ""}>3 Trade</li>
         </ol>
 
-        <div className="hero-prob">
-          <div className="asset">Your address — keys stay on device</div>
-          <div className="row">
-            <strong style={{ fontSize: "1.35rem" }}>
-              {shortAddr(wallet.address)}
-            </strong>
-          </div>
-        </div>
-
-        <p className="fund-copy">
-          DreamDEX Event Contracts without opening DreamDEX. Deposit{" "}
-          <b>STT</b> (gas) and <b>tUSDC</b> (stake). Wins and losses settle here.
+        <div className="kicker">Desk {hostId} · keys stay on this device</div>
+        <p className="addr">{shortAddr(wallet.address)}</p>
+        <p className="copy">
+          Get faucet sends dust: 0.01 STT for gas and 1 tUSDC for one tap.
+          PnL still lands on this address.
         </p>
 
-        <div className="bal-row">
+        <div className="bals">
           <div className={stepStt ? "ok" : ""}>
-            <span>STT {stepStt ? "✓" : ""}</span>
-            <b>{bal?.sttLabel ?? "…"}</b>
+            <span>STT {stepStt ? "in" : "empty"}</span>
+            <b>{bal?.sttLabel ?? "—"}</b>
           </div>
           <div className={stepTusdc ? "ok" : ""}>
-            <span>tUSDC {stepTusdc ? "✓" : ""}</span>
-            <b>{bal?.tusdcLabel ?? "…"}</b>
+            <span>tUSDC {stepTusdc ? "in" : "empty"}</span>
+            <b>{bal?.tusdcLabel ?? "—"}</b>
           </div>
         </div>
 
-        <button type="button" className="primary-btn" onClick={() => void copyAddress()}>
-          {copied === "addr" ? "Address copied" : "Copy deposit address"}
-        </button>
+        <div className="stack">
+          <button
+            type="button"
+            className="act act-ink"
+            disabled={fauceting}
+            onClick={() => void getFaucet()}
+          >
+            {fauceting ? "Sending…" : "Get faucet"}
+          </button>
+          <button
+            type="button"
+            className="act act-line"
+            disabled={!fundedEnough}
+            onClick={goTrade}
+          >
+            {fundedEnough ? "Open the card" : "Waiting on faucet"}
+          </button>
+        </div>
 
+        <p className="hint">{statusText}</p>
+
+        <button type="button" className="act-text" onClick={() => void copyAddress()}>
+          {copied === "addr" ? "Copied" : "Copy address"}
+        </button>
+        <button type="button" className="act-text" onClick={() => void refreshBal(wallet.address)}>
+          Refresh
+        </button>
         <a
-          className="link-btn"
+          className="act-text"
           href={`${EXPLORER_ADDR}${wallet.address}`}
           target="_blank"
           rel="noreferrer"
         >
-          View on explorer →
+          Explorer
         </a>
-        <a className="link-btn" href={FAUCET} target="_blank" rel="noreferrer">
-          1 · Get STT faucet →
-        </a>
-
-        <button
-          type="button"
-          className="secondary-btn"
-          disabled={!exchange || !bal || bal.stt === 0n}
-          onClick={() => void claimFaucetTusdc()}
-        >
-          2 · Claim tUSDC faucet (needs STT)
-        </button>
-
-        <p className="tiny-hint">
-          Testnet tUSDC: <code>{TUSDC_HINT.slice(0, 10)}…</code> · host{" "}
-          <b>{hostId}</b>
-        </p>
-
-        <button
-          type="button"
-          className="primary-btn"
-          disabled={!fundedEnough}
-          onClick={goTrade}
-        >
-          {fundedEnough ? "3 · Trade Up / Down →" : "Waiting for STT + tUSDC…"}
-        </button>
-
-        <button
-          type="button"
-          className="drawer-toggle"
-          onClick={() => void refreshBal(wallet.address)}
-        >
-          Refresh balances
-        </button>
-
-        <button
-          type="button"
-          className="drawer-toggle"
-          onClick={() => setShowKey((v) => !v)}
-        >
-          {showKey ? "Hide" : "Backup"} private key
+        <button type="button" className="act-text" onClick={() => setShowKey((v) => !v)}>
+          {showKey ? "Hide key" : "Backup key"}
         </button>
         {showKey && (
           <div className="key-box">
-            <p>
-              This key controls your funds. Store it offline. Anyone with it owns
-              the wallet.
-            </p>
+            <p>This key is the wallet. Anyone who has it owns the funds.</p>
             <code>{wallet.privateKey}</code>
-            <button type="button" className="secondary-btn" onClick={() => void copyKey()}>
-              {copied === "key" ? "Key copied" : "Copy private key"}
+            <button type="button" className="act act-line" onClick={() => void copyKey()}>
+              {copied === "key" ? "Copied" : "Copy key"}
             </button>
           </div>
         )}
 
-        {error && <div className="status err-box">{error}</div>}
+        {error && <div className="err-box">{error}</div>}
         {lastTx && (
           <div className="tx">
             <a href={`${EXPLORER_TX}${lastTx}`} target="_blank" rel="noreferrer">
-              Last tx →
+              Last tx
             </a>
           </div>
         )}
@@ -458,25 +449,32 @@ export function App() {
 
   return (
     <div className="shell">
-      <div className="top">
-        <div className="brand">
-          Anywhere <span>· {hostId}</span>
+      <header className="mast">
+        <div className="mark">
+          Anywhere
+          <span>{hostId}</span>
         </div>
-        <button type="button" className="pill" onClick={() => setScreen("fund")}>
-          {shortAddr(wallet.address)} · {bal?.tusdcLabel ?? "—"} tUSDC
+        <button type="button" className="wallet" onClick={() => setScreen("fund")}>
+          {shortAddr(wallet.address)} · {bal?.tusdcLabel ?? "—"}
         </button>
-      </div>
+      </header>
 
-      <div className="hero-prob">
-        <div className="asset">{asset} Event Contract</div>
-        <div className="row">
-          <strong key={probKey}>{formatPct(book.upProb)}</strong>
-          <div className={`ttl-block${(ttlSec ?? 99) < 90 ? " urgent" : ""}`}>
-            <span className="lbl">Expires</span>
-            <span className="val">{ttlLabel(ttlSec)}</span>
-          </div>
+      <div className="kicker">{asset} event contract · desk {hostId}</div>
+      <div className="odds-row">
+        <div className={book.upProb == null ? "odds empty" : "odds"} key={probKey}>
+          {formatPct(book.upProb)}
+          {book.upProb != null && <small>Up implied</small>}
+        </div>
+        <div className={`clock${(ttlSec ?? 99) < 90 ? " urgent" : ""}`}>
+          <span className="lbl">Window</span>
+          <span className="val">{ttlLabel(ttlSec)}</span>
         </div>
       </div>
+      {book.upProb != null && (
+        <div className="split" aria-hidden="true">
+          <i style={{ width: `${Math.max(4, Math.min(96, book.upProb * 100))}%` }} />
+        </div>
+      )}
 
       <div className="book">
         <span>
@@ -489,21 +487,25 @@ export function App() {
 
       <MiniChart ticks={ticks} strikeHint={book.mid} />
 
-      <div className="sizes">
+      <div className="stakes">
         {([1, 5, 25] as const).map((s) => (
           <button
             key={s}
             type="button"
             className={size === s ? "on" : ""}
             onClick={() => setSize(s)}
-            disabled={phase === "busy"}
+            disabled={
+              phase === "busy" ||
+              (bal != null &&
+                bal.tusdc < BigInt(s) * 10n ** BigInt(bal.decimals))
+            }
           >
-            {s} tUSDC
+            {s}
           </button>
         ))}
       </div>
 
-      <div className={`actions${phase === "busy" ? " busy" : ""}`}>
+      <div className={`sides${phase === "busy" ? " busy" : ""}`}>
         <button
           type="button"
           className="up"
@@ -511,7 +513,7 @@ export function App() {
           onClick={() => void onTrade("up")}
         >
           Up
-          <small>Price goes higher</small>
+          <small>Higher</small>
         </button>
         <button
           type="button"
@@ -520,29 +522,31 @@ export function App() {
           onClick={() => void onTrade("down")}
         >
           Down
-          <small>Price goes lower</small>
+          <small>Lower</small>
         </button>
       </div>
 
-      <div className={`status ${phase}`}>
-        <div className="label">Status</div>
+      <div className={`tape ${phase}`}>
+        <div className="label">Tape</div>
         <div className="body">{statusText}</div>
         {lastTx && (
           <div className="tx">
             <a href={`${EXPLORER_TX}${lastTx}`} target="_blank" rel="noreferrer">
-              View on Shannon explorer →
+              Shannon explorer
             </a>
           </div>
         )}
         {(error || (!ready && !error)) && (
-          <div className="err">{error ?? "Connecting to Shannon…"}</div>
+          <div className={error ? "err" : "wait"}>
+            {error ?? "Connecting to Shannon…"}
+          </div>
         )}
       </div>
 
       {phase === "settled" && (
         <button
           type="button"
-          className="drawer-toggle"
+          className="act-text"
           onClick={() => {
             setPhase("idle");
             setOpenBet(null);
@@ -550,16 +554,16 @@ export function App() {
             setStatusText("Pick Up or Down — PnL settles to your address.");
           }}
         >
-          Trade again
+          Next window
         </button>
       )}
 
       <button
         type="button"
-        className="drawer-toggle"
+        className="act-text"
         onClick={() => setShowHistory((v) => !v)}
       >
-        {showHistory ? "Hide" : "Show"} history ({bets.length})
+        {showHistory ? "Hide" : "Card"} history ({bets.length})
       </button>
       {showHistory && (
         <div className="history">

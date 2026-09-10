@@ -2,13 +2,21 @@ type Props = { ticks: number[]; strikeHint?: number | null };
 
 export function MiniChart({ ticks, strikeHint }: Props) {
   const w = 360;
-  const h = 88;
+  const h = 76;
+  const ink = "currentColor";
   if (ticks.length < 2) {
     return (
       <div className="chart">
         <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
-          <text x="16" y="48" fill="#8a949e" fontSize="12" fontFamily="IBM Plex Sans, sans-serif">
-            Streaming odds…
+          <text
+            x="10"
+            y="42"
+            fill="currentColor"
+            opacity="0.45"
+            fontSize="11"
+            fontFamily="IBM Plex Mono, ui-monospace, monospace"
+          >
+            waiting on the book…
           </text>
         </svg>
       </div>
@@ -19,46 +27,42 @@ export function MiniChart({ ticks, strikeHint }: Props) {
   const span = Math.max(0.008, max - min);
   const coords = ticks.map((v, i) => {
     const x = (i / (ticks.length - 1)) * (w - 8) + 4;
-    const y = h - 10 - ((v - min) / span) * (h - 20);
+    const y = h - 8 - ((v - min) / span) * (h - 16);
     return [x, y] as const;
   });
-  const line = coords.map(([x, y]) => `${x},${y}`).join(" ");
-  const area = `4,${h} ${line} ${w - 4},${h}`;
+  // stepped tote line
+  const parts: string[] = [];
+  coords.forEach(([x, y], i) => {
+    if (i === 0) parts.push(`M ${x} ${y}`);
+    else parts.push(`H ${x} V ${y}`);
+  });
 
   let strikeY: number | null = null;
   if (strikeHint != null) {
-    strikeY = h - 10 - ((strikeHint - min) / span) * (h - 20);
+    strikeY = h - 8 - ((strikeHint - min) / span) * (h - 16);
   }
 
   return (
     <div className="chart">
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2fd67b" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#2fd67b" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon fill="url(#areaFill)" points={area} />
         {strikeY != null && (
           <line
             x1={0}
             x2={w}
             y1={strikeY}
             y2={strikeY}
-            stroke="#e6c35c"
-            strokeDasharray="3 5"
-            strokeWidth="1.25"
-            opacity="0.75"
+            stroke={ink}
+            strokeDasharray="2 4"
+            strokeWidth="1"
+            opacity="0.35"
           />
         )}
-        <polyline
+        <path
+          d={parts.join(" ")}
           fill="none"
-          stroke="#2fd67b"
-          strokeWidth="2.25"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          points={line}
+          stroke={ink}
+          strokeWidth="1.75"
+          strokeLinejoin="miter"
         />
       </svg>
     </div>

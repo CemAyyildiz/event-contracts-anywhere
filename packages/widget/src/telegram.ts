@@ -10,7 +10,7 @@ type TelegramWebApp = {
   ready: () => void;
   expand: () => void;
   close?: () => void;
-  themeParams?: Record<string, string | undefined>;
+  initData?: string;
   colorScheme?: "light" | "dark";
   initDataUnsafe?: {
     start_param?: string;
@@ -50,28 +50,23 @@ export type TelegramSession = {
 };
 
 function applyTheme(wa: TelegramWebApp) {
-  const bg = wa.themeParams?.bg_color || "#07090c";
-  const header = wa.themeParams?.header_bg_color || bg;
+  const dark = wa.colorScheme === "dark";
+  document.documentElement.classList.toggle("theme-dark", dark);
+  document.documentElement.classList.add("tg-surface");
+  const bg = dark ? "#1c1814" : "#efe6d4";
   try {
-    wa.setHeaderColor?.(header);
+    wa.setHeaderColor?.(bg);
     wa.setBackgroundColor?.(bg);
   } catch {
     /* older clients */
   }
-  document.documentElement.style.setProperty("--tg-bg", bg);
-  if (wa.themeParams?.button_color) {
-    document.documentElement.style.setProperty(
-      "--tg-button",
-      wa.themeParams.button_color,
-    );
-  }
-  document.documentElement.classList.add("tg-surface");
 }
 
 /** Init Telegram WebApp if present; return hostId from startapp if any. */
 export function initTelegram(): TelegramSession {
   const wa = window.Telegram?.WebApp;
-  if (!wa) {
+  const inTelegram = Boolean(wa && (wa.initData || wa.initDataUnsafe?.user));
+  if (!inTelegram) {
     return { isTelegram: false, startHost: null, userLabel: null };
   }
   try {
