@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      viem:
+        specifier: ^2.37.0
+        version: 2.56.3(typescript@5.9.3)
 
   packages/trade-core:
     dependencies:
