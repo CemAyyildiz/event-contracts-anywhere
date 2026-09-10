@@ -49,3 +49,4 @@ _bmad-output/**/.memlog.md
 .cache/
 playwright-report/
 test-results/
+.vercel

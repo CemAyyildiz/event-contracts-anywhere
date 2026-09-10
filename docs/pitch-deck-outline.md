@@ -1,47 +1,47 @@
 # Pitch Deck Outline — Event Contracts Anywhere
 
-**Length:** 8 slides · **Tone:** production architecture on Shannon · **Demo:** live URL + explorer tx
+**Length:** 8 slides · **Demo:** `/home` + `/tma` + explorer tx
 
 ## Slide 1 — Title
 **Event Contracts Anywhere**  
-Zero-setup Up/Down trades — embedded where users already are.  
+DreamDEX Event Contracts where people already are — Telegram first.  
 Somnia × DreamDEX Hackathon · Shannon testnet
 
 ## Slide 2 — Problem
-- Thousands of Event Contract markets; vast majority see zero flow
-- Funnel today: open DreamDEX → connect wallet → get STT/tUSDC → learn UI
-- Hackathon supply-side crowded; **demand/distribution** underserved
+- Event Contracts exist; the funnel to trade them is long
+- Today: leave the chat → open DreamDEX → connect wallet → fund → learn UI
+- Distribution is the missing layer, not another chart
 
 ## Slide 3 — Solution
-- Embeddable **Up/Down** widget (web script + Telegram Mini App path)
-- **Session wallet** (burner) — no MetaMask for the bettor
-- Sponsored first touch (testnet faucet / sponsor service)
-- Every fill hits the real Somnia Markets order book (`mintSet`-guaranteed when thin)
+- Telegram Mini App (`/tma`) + embeddable widget
+- **Session wallet** created on device — address is yours
+- User deposits STT + tUSDC; Up/Down hits the real book
+- Keys in localStorage / Telegram CloudStorage — never our backend
 
 ## Slide 4 — Live product
-- QR / link → demo page or TMA
-- Tap Up/Down → Shannon tx → explorer
-- Host attribution model (on-chain router **or** off-chain map)
+- Home → Mini App → deposit → trade → Shannon explorer
+- Host attribution via `startapp` / `?host=`
+- Backup / export private key in-app
 
-## Slide 5 — Why it matters (ecosystem)
-- Brings *new* users who never open DreamDEX
-- Turns publishers/Telegram admins into distribution (affiliate economics)
-- Directly increases Event Contract trading activity
+## Slide 5 — Why it matters
+- Brings traders who never open DreamDEX
+- Channels become distribution (affiliate-ready host ids)
+- Direct lift to Event Contract activity
 
-## Slide 6 — Architecture (1 diagram)
-- `trade-core` (SDK) · `widget` · sponsor · indexer · dashboard
+## Slide 6 — Architecture
+- `trade-core` (SDK) · `widget` (TMA + embed)
 - Invariant: private keys never leave the client
-- Mainnet cutover: same UX, deposit/Relay replaces faucet
+- Mainnet: same UX, faucet → real deposit rails
 
-## Slide 7 — Traction / proof
-- Shannon: live BTC/ETH short windows verified (S1 GO)
-- End-to-end fill on testnet (IOC / mint-sell path)
-- Repo + docs + SDK feedback submitted
+## Slide 7 — Proof
+- Shannon short-window BTC/ETH markets verified
+- End-to-end fill (`buyGuaranteed`)
+- Live: vercel `/home` `/tma` · GitHub · SDK feedback
 
-## Slide 8 — Ask / next 1–2 weeks
-1. Public burner + sponsor hardening  
-2. Telegram Mini App pilot in 2–3 groups  
-3. Mainnet addresses + deposit path  
+## Slide 8 — Next
+1. Live Telegram channels  
+2. Discord surface  
+3. Mainnet cutover  
 4. Host payout claims  
 
-**Links:** GitHub · Live demo · Demo video · SDK feedback
+**Links:** GitHub · https://event-contracts-anywhere.vercel.app/home/ · Demo video

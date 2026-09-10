@@ -1,17 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { buyGuaranteed, redeem, TradeCoreError } from "@eca/trade-core";
-import type { Hex } from "viem";
+import type { Address, Hex } from "viem";
 import { MiniChart } from "./MiniChart";
 import { loadBets, pushBet, type BetRecord } from "./history";
 import { useTradeSession } from "./useTradeSession";
+import {
+  ensureSessionWallet,
+  shortAddr,
+  type SessionWallet,
+} from "./wallet/sessionWallet";
+import { fetchBalances } from "./wallet/balances";
+import {
+  initTelegram,
+  loadTelegramScript,
+  setTelegramMainButton,
+  tgHaptic,
+} from "./telegram";
 
-const EXPLORER = "https://shannon-explorer.somnia.network/tx/";
+const EXPLORER_TX = "https://shannon-explorer.somnia.network/tx/";
+const EXPLORER_ADDR = "https://shannon-explorer.somnia.network/address/";
+const FAUCET = "https://testnet.somnia.network/";
+const TUSDC_HINT = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E";
 
 function params() {
   const q = new URLSearchParams(window.location.search);
   return {
     hostId: q.get("host") || "anonymous",
     asset: (q.get("market") || "BTC").toUpperCase(),
+    surface: q.get("surface") || "web",
   };
 }
 
@@ -30,26 +46,85 @@ function ttlLabel(sec: number | null | undefined) {
 }
 
 type Phase = "idle" | "open" | "settled" | "busy";
+type Screen = "boot" | "fund" | "trade";
 
 export function App() {
-  const { hostId, asset } = useMemo(() => params(), []);
-  const pk = import.meta.env.VITE_PRIVATE_KEY as string | undefined;
-  const privateKey = pk
-    ? ((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex)
-    : undefined;
+  const base = useMemo(() => params(), []);
+  const [hostId, setHostId] = useState(base.hostId);
+  const asset = base.asset;
 
+  const [wallet, setWallet] = useState<SessionWallet | null>(null);
+  const [screen, setScreen] = useState<Screen>("boot");
+  const [isTelegram, setIsTelegram] = useState(false);
+  const [userLabel, setUserLabel] = useState<string | null>(null);
+  const [bal, setBal] = useState<{
+    sttLabel: string;
+    tusdcLabel: string;
+    stt: bigint;
+    tusdc: bigint;
+  } | null>(null);
+  const [copied, setCopied] = useState<"addr" | "key" | null>(null);
+  const [showKey, setShowKey] = useState(false);
+  const [isNewWallet, setIsNewWallet] = useState(false);
+
+  const privateKey = wallet?.privateKey as Hex | undefined;
   const { exchange, market, book, ticks, error, ready, setError } =
     useTradeSession(asset, privateKey);
 
   const [size, setSize] = useState<1 | 5 | 25>(1);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [statusText, setStatusText] = useState("One tap. No wallet setup.");
+  const [statusText, setStatusText] = useState(
+    "Pick Up or Down — fills hit DreamDEX. PnL settles to your address.",
+  );
   const [bets, setBets] = useState<BetRecord[]>(() => loadBets());
   const [showHistory, setShowHistory] = useState(false);
   const [openBet, setOpenBet] = useState<BetRecord | null>(null);
   const [lastTx, setLastTx] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [probKey, setProbKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await loadTelegramScript();
+      if (cancelled) return;
+      const tg = initTelegram();
+      setIsTelegram(tg.isTelegram || base.surface === "tma");
+      setUserLabel(tg.userLabel);
+      if (tg.startHost) setHostId(tg.startHost);
+
+      const before = localStorage.getItem("eca.session.wallet.v1");
+      const w = await ensureSessionWallet();
+      if (cancelled) return;
+      setIsNewWallet(!before);
+      setWallet(w);
+      setScreen("fund");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [base.surface]);
+
+  async function refreshBal(addr: Address) {
+    const b = await fetchBalances(addr);
+    setBal(b);
+    return b;
+  }
+
+  useEffect(() => {
+    if (!wallet) return;
+    void refreshBal(wallet.address);
+    const t = setInterval(() => void refreshBal(wallet.address), 8000);
+    return () => clearInterval(t);
+  }, [wallet]);
+
+  // Returning funded users skip straight to trade
+  useEffect(() => {
+    if (!wallet || !bal || screen !== "fund") return;
+    if (bal.stt > 0n && bal.tusdc > 0n && !isNewWallet) {
+      setScreen("trade");
+    }
+  }, [wallet, bal, screen, isNewWallet]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -69,11 +144,33 @@ export function App() {
     const ro = new ResizeObserver(report);
     ro.observe(document.documentElement);
     return () => ro.disconnect();
-  }, [phase, showHistory, statusText, bets.length, lastTx]);
+  }, [screen, phase, showHistory, statusText, bets.length, lastTx, bal, showKey]);
 
   const ttlSec = market
     ? Math.max(0, Math.floor((market.expiryMs - now) / 1000))
     : null;
+
+  const fundedEnough = bal != null && bal.stt > 0n && bal.tusdc > 0n;
+
+  function goTrade() {
+    setScreen("trade");
+    setStatusText("Pick Up or Down — PnL settles to your address.");
+    tgHaptic("light");
+  }
+
+  // Telegram MainButton on fund screen when ready
+  useEffect(() => {
+    if (screen !== "fund" || !isTelegram) {
+      setTelegramMainButton(null);
+      return;
+    }
+    if (fundedEnough) {
+      setTelegramMainButton({ text: "Trade Up / Down", onClick: goTrade });
+    } else {
+      setTelegramMainButton(null);
+    }
+    return () => setTelegramMainButton(null);
+  }, [screen, isTelegram, fundedEnough]);
 
   useEffect(() => {
     if (phase !== "open" || !exchange || !openBet || !market) return;
@@ -96,6 +193,7 @@ export function App() {
                 ? "Resolved — this side lost"
                 : `Resolved · ${red.reason ?? "done"}`;
             setStatusText(note);
+            tgHaptic(red.redeemed ? "success" : "light");
             setBets((prev) => {
               const next = prev.map((b) =>
                 b.id === openBet.id
@@ -105,6 +203,7 @@ export function App() {
               localStorage.setItem("eca.bets.v1", JSON.stringify(next));
               return next;
             });
+            if (wallet) void refreshBal(wallet.address);
             clearInterval(timer);
           }
         }
@@ -116,16 +215,33 @@ export function App() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [phase, exchange, openBet, market]);
+  }, [phase, exchange, openBet, market, wallet]);
+
+  async function claimFaucetTusdc() {
+    if (!exchange || !wallet) return;
+    setStatusText("Requesting tUSDC faucet…");
+    try {
+      const f = await exchange.trader.faucet();
+      setLastTx(f.hash);
+      setStatusText("tUSDC faucet sent");
+      tgHaptic("success");
+      await refreshBal(wallet.address);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatusText("Faucet failed — need STT gas first");
+      tgHaptic("error");
+    }
+  }
 
   async function onTrade(side: "up" | "down") {
     setError(null);
-    if (!privateKey) {
-      setStatusText("Add VITE_PRIVATE_KEY to enable demo trades");
+    if (!wallet || !exchange || !market) {
+      setStatusText("Wallet or market not ready");
       return;
     }
-    if (!exchange || !market) {
-      setStatusText("Market not ready");
+    if (!fundedEnough) {
+      setScreen("fund");
+      setStatusText("Deposit STT + tUSDC first");
       return;
     }
     if ((ttlSec ?? 0) <= 60) {
@@ -160,6 +276,8 @@ export function App() {
       setStatusText(
         `${side === "up" ? "Up" : "Down"} live · ${size} tUSDC · ${fill.path}`,
       );
+      tgHaptic("success");
+      void refreshBal(wallet.address);
     } catch (e) {
       setPhase("idle");
       const msg =
@@ -170,31 +288,187 @@ export function App() {
             : String(e);
       setStatusText("Trade failed");
       setError(msg);
+      tgHaptic("error");
     }
   }
 
-  const canTrade = ready && phase !== "busy" && phase !== "open";
+  async function copyAddress() {
+    if (!wallet) return;
+    await navigator.clipboard.writeText(wallet.address);
+    setCopied("addr");
+    tgHaptic("light");
+    setTimeout(() => setCopied(null), 1500);
+  }
+
+  async function copyKey() {
+    if (!wallet) return;
+    await navigator.clipboard.writeText(wallet.privateKey);
+    setCopied("key");
+    tgHaptic("warning");
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  const canTrade =
+    ready && phase !== "busy" && phase !== "open" && fundedEnough;
+
+  const stepStt = bal != null && bal.stt > 0n;
+  const stepTusdc = bal != null && bal.tusdc > 0n;
+
+  if (screen === "boot" || !wallet) {
+    return (
+      <div className="shell">
+        <div className="brand">Anywhere</div>
+        <div className="status">
+          <div className="label">Session</div>
+          <div className="body">Creating your wallet on this device…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "fund") {
+    return (
+      <div className="shell">
+        <div className="top">
+          <div className="brand">
+            Anywhere{" "}
+            <span>· {isTelegram ? userLabel || "Telegram" : "Web"}</span>
+          </div>
+          <div className="live">
+            <i aria-hidden />
+            Shannon
+          </div>
+        </div>
+
+        <ol className="steps">
+          <li className="done">
+            <b>1</b> Wallet created
+          </li>
+          <li className={stepStt && stepTusdc ? "done" : "on"}>
+            <b>2</b> Deposit
+          </li>
+          <li className={fundedEnough ? "done" : ""}>
+            <b>3</b> Trade
+          </li>
+        </ol>
+
+        <div className="hero-prob">
+          <div className="asset">Your address — keys stay on device</div>
+          <div className="row">
+            <strong style={{ fontSize: "1.35rem" }}>
+              {shortAddr(wallet.address)}
+            </strong>
+          </div>
+        </div>
+
+        <p className="fund-copy">
+          DreamDEX Event Contracts without opening DreamDEX. Deposit{" "}
+          <b>STT</b> (gas) and <b>tUSDC</b> (stake). Wins and losses settle here.
+        </p>
+
+        <div className="bal-row">
+          <div className={stepStt ? "ok" : ""}>
+            <span>STT {stepStt ? "✓" : ""}</span>
+            <b>{bal?.sttLabel ?? "…"}</b>
+          </div>
+          <div className={stepTusdc ? "ok" : ""}>
+            <span>tUSDC {stepTusdc ? "✓" : ""}</span>
+            <b>{bal?.tusdcLabel ?? "…"}</b>
+          </div>
+        </div>
+
+        <button type="button" className="primary-btn" onClick={() => void copyAddress()}>
+          {copied === "addr" ? "Address copied" : "Copy deposit address"}
+        </button>
+
+        <a
+          className="link-btn"
+          href={`${EXPLORER_ADDR}${wallet.address}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View on explorer →
+        </a>
+        <a className="link-btn" href={FAUCET} target="_blank" rel="noreferrer">
+          1 · Get STT faucet →
+        </a>
+
+        <button
+          type="button"
+          className="secondary-btn"
+          disabled={!exchange || !bal || bal.stt === 0n}
+          onClick={() => void claimFaucetTusdc()}
+        >
+          2 · Claim tUSDC faucet (needs STT)
+        </button>
+
+        <p className="tiny-hint">
+          Testnet tUSDC: <code>{TUSDC_HINT.slice(0, 10)}…</code> · host{" "}
+          <b>{hostId}</b>
+        </p>
+
+        <button
+          type="button"
+          className="primary-btn"
+          disabled={!fundedEnough}
+          onClick={goTrade}
+        >
+          {fundedEnough ? "3 · Trade Up / Down →" : "Waiting for STT + tUSDC…"}
+        </button>
+
+        <button
+          type="button"
+          className="drawer-toggle"
+          onClick={() => void refreshBal(wallet.address)}
+        >
+          Refresh balances
+        </button>
+
+        <button
+          type="button"
+          className="drawer-toggle"
+          onClick={() => setShowKey((v) => !v)}
+        >
+          {showKey ? "Hide" : "Backup"} private key
+        </button>
+        {showKey && (
+          <div className="key-box">
+            <p>
+              This key controls your funds. Store it offline. Anyone with it owns
+              the wallet.
+            </p>
+            <code>{wallet.privateKey}</code>
+            <button type="button" className="secondary-btn" onClick={() => void copyKey()}>
+              {copied === "key" ? "Key copied" : "Copy private key"}
+            </button>
+          </div>
+        )}
+
+        {error && <div className="status err-box">{error}</div>}
+        {lastTx && (
+          <div className="tx">
+            <a href={`${EXPLORER_TX}${lastTx}`} target="_blank" rel="noreferrer">
+              Last tx →
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="shell">
-      {!privateKey && (
-        <div className="warn-banner">
-          Demo signer missing — set VITE_PRIVATE_KEY for live taps.
-        </div>
-      )}
-
       <div className="top">
         <div className="brand">
           Anywhere <span>· {hostId}</span>
         </div>
-        <div className="live">
-          <i aria-hidden />
-          Live
-        </div>
+        <button type="button" className="pill" onClick={() => setScreen("fund")}>
+          {shortAddr(wallet.address)} · {bal?.tusdcLabel ?? "—"} tUSDC
+        </button>
       </div>
 
       <div className="hero-prob">
-        <div className="asset">{asset} next window</div>
+        <div className="asset">{asset} Event Contract</div>
         <div className="row">
           <strong key={probKey}>{formatPct(book.upProb)}</strong>
           <div className={`ttl-block${(ttlSec ?? 99) < 90 ? " urgent" : ""}`}>
@@ -255,7 +529,7 @@ export function App() {
         <div className="body">{statusText}</div>
         {lastTx && (
           <div className="tx">
-            <a href={`${EXPLORER}${lastTx}`} target="_blank" rel="noreferrer">
+            <a href={`${EXPLORER_TX}${lastTx}`} target="_blank" rel="noreferrer">
               View on Shannon explorer →
             </a>
           </div>
@@ -273,7 +547,7 @@ export function App() {
             setPhase("idle");
             setOpenBet(null);
             setLastTx(null);
-            setStatusText("One tap. No wallet setup.");
+            setStatusText("Pick Up or Down — PnL settles to your address.");
           }}
         >
           Trade again

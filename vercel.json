@@ -5,6 +5,8 @@
   "buildCommand": "pnpm --filter @eca/widget build",
   "outputDirectory": "packages/widget/dist",
   "rewrites": [
-    { "source": "/demo", "destination": "/demo/index.html" }
+    { "source": "/demo", "destination": "/demo/index.html" },
+    { "source": "/tma", "destination": "/tma/index.html" },
+    { "source": "/home", "destination": "/home/index.html" }
   ]
 }
