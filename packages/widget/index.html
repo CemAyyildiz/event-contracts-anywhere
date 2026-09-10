@@ -2,17 +2,517 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="DreamDEX Event Contracts as a slip a host drops on someone else’s page. Reader stays. Fill hits Shannon."
+    />
+    <meta name="theme-color" content="#efe6d4" />
+    <title>Anywhere — the book is empty because nobody goes there</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap"
       rel="stylesheet"
     />
-    <title>ECA Widget</title>
+    <style>
+      :root {
+        --paper: #efe6d4;
+        --paper-2: #e4d8c3;
+        --ink: #1a1612;
+        --mute: #6b6256;
+        --rule: #c4b9a4;
+        --up: #165c38;
+        --down: #9b1d1d;
+        --stamp: #c45c1a;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); }
+      body {
+        font-family: "Source Sans 3", sans-serif;
+        background-image:
+          radial-gradient(circle at 1px 1px, rgba(26, 22, 18, 0.045) 1px, transparent 0);
+        background-size: 7px 7px;
+      }
+      a { color: inherit; }
+      .tape {
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .tape-track {
+        display: inline-block;
+        padding: 0.42rem 0;
+        animation: tick 26s linear infinite;
+      }
+      @keyframes tick {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+      .mast {
+        text-align: center;
+        padding: 0.85rem 1.1rem 0.7rem;
+        border-bottom: 4px solid var(--ink);
+      }
+      .mast .k {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mute);
+      }
+      .mast h1 {
+        font-family: "Archivo Narrow", sans-serif;
+        font-size: clamp(2.6rem, 9vw, 4.6rem);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0.1rem 0 0.15rem;
+        line-height: 0.86;
+      }
+      .mast .sub {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .rail {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.4rem 1.1rem;
+        border-bottom: 1px solid var(--ink);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .rail nav { display: flex; gap: 0.95rem; flex-wrap: wrap; }
+      .rail a { text-decoration: none; }
+      .rail a:hover { text-decoration: underline; text-underline-offset: 3px; }
+      .pip {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        background: var(--up);
+        margin-right: 0.35rem;
+        animation: blink 1.4s steps(2) infinite;
+      }
+      @keyframes blink { 50% { opacity: 0.15; } }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.1rem; width: 100%; }
+      .fold {
+        display: grid;
+        gap: 1.6rem;
+        padding: 1.5rem 0 1.8rem;
+        border-bottom: 2px solid var(--ink);
+        align-items: start;
+      }
+      .hed {
+        font-family: "Archivo Narrow", sans-serif;
+        font-size: clamp(2.2rem, 6.4vw, 4.15rem);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        line-height: 0.9;
+        text-transform: uppercase;
+        margin: 0 0 0.85rem;
+      }
+      .hed em { font-style: normal; color: var(--up); }
+      .lede { font-size: 1.12rem; line-height: 1.45; max-width: 42ch; margin: 0 0 1rem; }
+      .hero-links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.1rem; }
+      .btn {
+        display: inline-block;
+        padding: 0.68rem 0.95rem;
+        text-decoration: none;
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--ink);
+        font-size: 0.98rem;
+      }
+      .btn.fill { background: var(--ink); color: var(--paper); }
+      .btn.up { background: var(--up); border-color: var(--up); color: #f4f1ea; }
+      .chips {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        border: 1px solid var(--ink);
+      }
+      .chips div { padding: 0.7rem 0.7rem 0.65rem; }
+      .chips div + div { border-left: 1px solid var(--ink); }
+      .chips b {
+        display: block;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 1.02rem;
+        font-weight: 500;
+      }
+      .chips span {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--mute);
+      }
+      .ticket {
+        position: relative;
+        border: 2px solid var(--ink);
+        box-shadow: 10px 10px 0 var(--ink);
+        background: var(--paper);
+        padding: 0.55rem 0.55rem 0.15rem;
+      }
+      .ticket .stub {
+        display: flex;
+        justify-content: space-between;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.15rem 0.35rem 0.45rem;
+      }
+      .stamp {
+        position: absolute;
+        top: 1.15rem;
+        right: -0.35rem;
+        transform: rotate(12deg);
+        border: 2px solid var(--stamp);
+        color: var(--stamp);
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        padding: 0.18rem 0.4rem;
+        background: rgba(239, 230, 212, 0.88);
+        pointer-events: none;
+        z-index: 2;
+      }
+      .versus {
+        display: grid;
+        grid-template-columns: 1fr;
+        border: 1px solid var(--ink);
+        margin: 1.6rem 0 0;
+      }
+      .versus article { padding: 0.9rem 1rem 1rem; }
+      .versus article + article { border-top: 1px solid var(--ink); }
+      .versus h3 {
+        margin: 0 0 0.45rem;
+        font-family: "Archivo Narrow", sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: 0.92rem;
+      }
+      .versus.win h3 { color: var(--up); }
+      .versus ol { margin: 0; padding-left: 1.1rem; line-height: 1.5; }
+      .versus.dead { opacity: 0.7; text-decoration: line-through; text-decoration-color: var(--down); }
+      h2.sec {
+        font-family: "Archivo Narrow", sans-serif;
+        font-size: 1.02rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 0 0 1rem;
+        padding-top: 2rem;
+        scroll-margin-top: 0.5rem;
+      }
+      .roles { display: grid; grid-template-columns: 1fr; gap: 1.15rem; padding-bottom: 1.2rem; }
+      .role { border: 1px solid var(--ink); }
+      .role h3 {
+        margin: 0;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--ink);
+        font-family: "Archivo Narrow", sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: 0.98rem;
+      }
+      .role ol { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+      .role li {
+        counter-increment: step;
+        display: grid;
+        grid-template-columns: 2.3rem 1fr;
+        gap: 0.65rem;
+        padding: 0.7rem 0.75rem;
+        border-bottom: 1px solid var(--rule);
+        line-height: 1.4;
+      }
+      .role li:last-child { border-bottom: 0; }
+      .role li::before {
+        content: counter(step, decimal-leading-zero);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.82rem;
+        color: var(--mute);
+        padding-top: 0.12rem;
+      }
+      .note { padding: 0 0 0.2rem; font-size: 0.98rem; max-width: 50ch; line-height: 1.45; }
+      .take {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 0 2.4rem;
+        align-items: start;
+      }
+      label {
+        display: block;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.66rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--mute);
+        margin: 0 0 0.28rem;
+      }
+      .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 0.9rem; }
+      input {
+        width: 100%;
+        font: 500 0.95rem "IBM Plex Mono", monospace;
+        padding: 0.52rem 0.55rem;
+        border: 1px solid var(--ink);
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .block { margin-bottom: 0.8rem; }
+      pre {
+        margin: 0 0 0.35rem;
+        padding: 0.65rem 0.7rem;
+        border: 1px solid var(--ink);
+        font: 0.7rem/1.4 "IBM Plex Mono", monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        background: var(--paper-2);
+      }
+      button.copy {
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+        padding: 0.48rem 0.75rem;
+        cursor: pointer;
+      }
+      button.copy.ghost { background: transparent; color: var(--ink); margin-left: 0.3rem; }
+      .preview { min-height: 22rem; }
+      .foot {
+        border-top: 3px solid var(--ink);
+        padding: 0.7rem 1.1rem 1.1rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.66rem;
+        color: var(--mute);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem 1.2rem;
+        justify-content: space-between;
+      }
+      @media (min-width: 920px) {
+        .fold { grid-template-columns: 1.05fr 0.95fr; gap: 2rem; padding-top: 1.85rem; }
+        .versus { grid-template-columns: 1fr 1fr; }
+        .versus article + article { border-top: 0; border-left: 1px solid var(--ink); }
+        .roles { grid-template-columns: 1fr 1fr; }
+        .take { grid-template-columns: 1fr 26rem; }
+      }
+      @media (max-width: 520px) {
+        .chips { grid-template-columns: 1fr; }
+        .chips div + div { border-left: 0; border-top: 1px solid var(--ink); }
+        .fields { grid-template-columns: 1fr; }
+        .mast .k { justify-content: center; flex-wrap: wrap; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="tape" aria-hidden="true">
+      <div class="tape-track">
+        Live book · Shannon 50312 · BTC window · host=wire-desk · Up/Down hits DreamDEX · keys on device · not a bot home ·
+        Live book · Shannon 50312 · BTC window · host=wire-desk · Up/Down hits DreamDEX · keys on device · not a bot home ·
+      </div>
+    </div>
+
+    <header class="mast">
+      <div class="k">
+        <span>Vol. 01 · desk copy</span>
+        <span>11 Sep 2026</span>
+        <span>Shannon final extra</span>
+      </div>
+      <h1>Anywhere</h1>
+      <div class="sub">Event contracts on someone else’s page</div>
+    </header>
+
+    <div class="rail">
+      <nav>
+        <a href="#how">How</a>
+        <a href="#take">Take the slip</a>
+        <a href="/demo/">In a page</a>
+        <a href="/slip/?host=wire-desk&amp;market=BTC">Open slip</a>
+      </nav>
+      <span><i class="pip"></i>Shannon · live window</span>
+    </div>
+
+    <div class="wrap">
+      <section class="fold">
+        <div>
+          <h2 class="hed">The book is empty because nobody <em>goes</em> there</h2>
+          <p class="lede">
+            A host pastes one script. The reader sees the slip in that page or chat.
+            Wallet prints on their device. Up or Down still hits the live DreamDEX book.
+          </p>
+          <div class="hero-links">
+            <a class="btn up" href="/demo/">Watch it in a page</a>
+            <a class="btn fill" href="#take">Steal the snippet</a>
+            <a class="btn" href="/slip/?host=jury&amp;market=BTC">Trade this slip</a>
+          </div>
+          <div class="chips">
+            <div><b>50312</b><span>Shannon</span></div>
+            <div><b>IOC / mint</b><span>thin-book fill</span></div>
+            <div><b>?host=</b><span>desk attribution</span></div>
+          </div>
+          <div class="versus">
+            <article class="dead">
+              <h3>The funnel they skip</h3>
+              <ol>
+                <li>Leave the chat</li>
+                <li>Open DreamDEX</li>
+                <li>Connect a wallet</li>
+                <li>Find the window</li>
+                <li>Maybe trade</li>
+              </ol>
+            </article>
+            <article class="win">
+              <h3>Anywhere</h3>
+              <ol>
+                <li>Slip already on the page</li>
+                <li>Wallet prints on device</li>
+                <li>Get faucet</li>
+                <li>Up or Down</li>
+                <li>Explorer proof</li>
+              </ol>
+            </article>
+          </div>
+        </div>
+        <div class="ticket">
+          <div class="stamp">On their page</div>
+          <div class="stub">
+            <span>Slip 001 · wire-desk</span>
+            <span>BTC window</span>
+          </div>
+          <script src="/w.js" data-host="wire-desk" data-market="BTC" data-peek="trade"></script>
+        </div>
+      </section>
+
+      <h2 class="sec" id="how">How it is used</h2>
+      <div class="roles">
+        <article class="role">
+          <h3>Host — a page or a channel</h3>
+          <ol>
+            <li><span>Pick a host id. That string is how volume is attributed.</span></li>
+            <li><span>Web: paste the script. Chat: paste the URL. Telegram, Discord, anywhere a link works.</span></li>
+            <li><span>Readers trade on your surface. You never send them to a bot home.</span></li>
+          </ol>
+        </article>
+        <article class="role">
+          <h3>Reader — stays put</h3>
+          <ol>
+            <li><span>The slip is already in the article or the message.</span></li>
+            <li><span>A session wallet is created on their device. Keys stay local.</span></li>
+            <li><span>They fund STT + tUSDC, tap Up or Down. PnL settles to that address.</span></li>
+          </ol>
+        </article>
+      </div>
+      <p class="note">
+        Telegram Mini App is plumbing so a chat URL can go full-screen. It is not the front door.
+      </p>
+
+      <h2 class="sec" id="take">Take the slip</h2>
+      <section class="take">
+        <div>
+          <div class="fields">
+            <div>
+              <label for="host">Host id</label>
+              <input id="host" value="wire-desk" autocomplete="off" />
+            </div>
+            <div>
+              <label for="market">Market</label>
+              <input id="market" value="BTC" autocomplete="off" />
+            </div>
+          </div>
+          <div class="block">
+            <label>Web — paste on any page</label>
+            <pre id="snippet"></pre>
+            <button type="button" class="copy" data-copy="snippet">Copy snippet</button>
+          </div>
+          <div class="block">
+            <label>Chat — paste this URL</label>
+            <pre id="drop"></pre>
+            <button type="button" class="copy" data-copy="drop">Copy URL</button>
+            <button type="button" class="copy ghost" id="open-preview">Open slip</button>
+          </div>
+        </div>
+        <div class="preview" id="take-preview"></div>
+      </section>
+    </div>
+
+    <footer class="foot">
+      <span>Keys on device · not financial advice</span>
+      <span>DreamDEX Event Contracts · Somnia Shannon</span>
+    </footer>
+    <script>
+      const origin = location.origin;
+      const hostEl = document.getElementById("host");
+      const marketEl = document.getElementById("market");
+      const snippetEl = document.getElementById("snippet");
+      const dropEl = document.getElementById("drop");
+
+      function host() {
+        return (hostEl.value || "anonymous").trim().replace(/\s+/g, "-") || "anonymous";
+      }
+      function market() {
+        return (marketEl.value || "BTC").trim().toUpperCase() || "BTC";
+      }
+      function render() {
+        const h = host();
+        const m = market();
+        snippetEl.textContent =
+          '<script src="' + origin + '/w.js" data-host="' + h + '" data-market="' + m + '"><\/script>';
+        dropEl.textContent = origin + "/slip/?host=" + encodeURIComponent(h) + "&market=" + encodeURIComponent(m);
+        const frame = document.querySelector("#take-preview iframe");
+        if (frame) {
+          frame.src =
+            "/slip/?host=" + encodeURIComponent(h) + "&market=" + encodeURIComponent(m) + "&peek=trade";
+        }
+      }
+      hostEl.addEventListener("input", render);
+      marketEl.addEventListener("input", render);
+      hostEl.addEventListener("change", render);
+      marketEl.addEventListener("change", render);
+
+      const s = document.createElement("script");
+      s.src = "/w.js";
+      s.setAttribute("data-host", "wire-desk");
+      s.setAttribute("data-market", "BTC");
+      s.setAttribute("data-peek", "trade");
+      document.getElementById("take-preview").appendChild(s);
+
+      render();
+      document.querySelectorAll("button.copy[data-copy]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-copy");
+          const text = document.getElementById(id).textContent;
+          await navigator.clipboard.writeText(text);
+          const original = btn.textContent;
+          btn.textContent = "Copied";
+          setTimeout(() => { btn.textContent = original; }, 1200);
+        });
+      });
+      document.getElementById("open-preview").addEventListener("click", () => {
+        window.open(dropEl.textContent, "_blank");
+      });
+    </script>
   </body>
 </html>

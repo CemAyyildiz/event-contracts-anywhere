@@ -3,136 +3,209 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Anywhere — tap the next Bitcoin print</title>
+    <title>Wire Desk — BTC’s next window</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --ink: #0e1218;
-        --muted: #5c6672;
-        --paper: #e8eaee;
-        --paper2: #dde1e8;
-        --line: #c5cad3;
-        --band: #0a0d12;
-        --band-text: #d7dde4;
-        --accent: #7eb6ff;
+        --paper: #efe6d4;
+        --paper-2: #e4d8c3;
+        --ink: #1a1612;
+        --mute: #6b6256;
+        --rule: #c4b9a4;
+        --up: #165c38;
+        --stamp: #c45c1a;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: "IBM Plex Sans", system-ui, sans-serif;
-        background:
-          radial-gradient(80% 50% at 50% -10%, #d9d3c8, transparent),
-          linear-gradient(180deg, var(--paper), var(--paper2));
+        font-family: "Source Sans 3", sans-serif;
+        background: var(--paper);
         color: var(--ink);
-        line-height: 1.55;
+        line-height: 1.5;
         min-height: 100vh;
+        background-image:
+          radial-gradient(circle at 1px 1px, rgba(26, 22, 18, 0.045) 1px, transparent 0);
+        background-size: 7px 7px;
       }
-      .band {
-        background:
-          radial-gradient(90% 120% at 80% 0%, rgba(47, 214, 123, 0.12), transparent 50%),
-          radial-gradient(70% 100% at 0% 100%, rgba(255, 92, 92, 0.1), transparent 45%),
-          var(--band);
-        color: var(--band-text);
-        padding: 1.1rem 1rem 1.35rem;
-      }
-      .band-inner {
-        max-width: 720px;
-        margin: 0 auto;
-      }
-      .band .mark {
-        font-size: 0.72rem;
-        letter-spacing: 0.16em;
+      .tape {
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--accent);
-        font-weight: 600;
-        margin-bottom: 0.55rem;
+        white-space: nowrap;
       }
-      .band h1 {
-        font-family: "Fraunces", Georgia, serif;
-        font-size: clamp(1.85rem, 5vw, 2.6rem);
-        font-weight: 650;
-        line-height: 1.12;
-        margin: 0 0 0.55rem;
-        color: #f4f6f8;
-        max-width: 18ch;
+      .tape span { display: inline-block; padding: 0.35rem 0; animation: tick 22s linear infinite; }
+      @keyframes tick { to { transform: translateX(-50%); } }
+      .mast {
+        border-bottom: 4px solid var(--ink);
+        padding: 0.85rem 1.1rem 0.7rem;
+        text-align: center;
       }
-      .band p {
-        margin: 0;
-        max-width: 36ch;
-        color: #9aa3ad;
-        font-size: 0.95rem;
-      }
-      article {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 1.5rem 1rem 3rem;
-      }
-      .meta {
-        font-size: 0.8rem;
-        color: var(--muted);
-        margin-bottom: 1rem;
-        letter-spacing: 0.02em;
-      }
-      .lede {
-        font-family: "Fraunces", Georgia, serif;
-        font-size: 1.2rem;
-        font-weight: 500;
-        line-height: 1.45;
-        margin: 0 0 1.25rem;
-        max-width: 40ch;
-      }
-      p { margin: 0 0 1rem; font-size: 1.02rem; color: #2a3038; }
-      .widget-slot {
-        margin: 1.5rem 0 1.75rem;
-        min-height: 380px;
-      }
-      .widget-slot::before {
-        content: "Predict in-place · Shannon testnet";
-        display: block;
-        font-size: 0.7rem;
+      .mast .k {
+        display: flex;
+        justify-content: space-between;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.62rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 0.65rem;
+        color: var(--mute);
+      }
+      .mast h1 {
+        font-family: "Archivo Narrow", sans-serif;
+        font-size: clamp(2.5rem, 10vw, 4.4rem);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        margin: 0.1rem 0 0.15rem;
+        line-height: 0.88;
+      }
+      .rail {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--ink);
+        padding: 0.35rem 1.1rem;
+      }
+      .grid {
+        max-width: 58rem;
+        margin: 0 auto;
+        padding: 1.35rem 1.1rem 2.2rem;
+        display: grid;
+        gap: 1.6rem;
+      }
+      .col h2 {
+        font-family: "Archivo Narrow", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        font-size: clamp(1.7rem, 5vw, 2.35rem);
+        line-height: 0.94;
+        margin: 0 0 0.55rem;
+      }
+      .by {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--mute);
+        margin: 0 0 0.85rem;
+      }
+      .col p { margin: 0 0 0.85rem; }
+      .stamp {
+        display: inline-block;
+        border: 2px solid var(--up);
+        color: var(--up);
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 0.18rem 0.42rem;
+        font-size: 0.72rem;
+        margin-bottom: 0.7rem;
+      }
+      .slot {
+        border: 2px solid var(--ink);
+        box-shadow: 8px 8px 0 var(--ink);
+        padding: 0.55rem;
+        background: var(--paper);
+        position: relative;
+      }
+      .slot .tag {
+        position: absolute;
+        top: 0.7rem;
+        right: -0.4rem;
+        transform: rotate(11deg);
+        border: 2px solid var(--stamp);
+        color: var(--stamp);
+        font-family: "Archivo Narrow", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        padding: 0.15rem 0.35rem;
+        background: rgba(239, 230, 212, 0.9);
+        z-index: 2;
+        pointer-events: none;
       }
       footer {
-        max-width: 720px;
+        max-width: 58rem;
         margin: 0 auto;
-        padding: 1rem 1rem 2rem;
-        font-size: 0.75rem;
-        color: var(--muted);
-        border-top: 1px solid var(--line);
+        padding: 0 1.1rem 1.5rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.66rem;
+        color: var(--mute);
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      footer a { color: inherit; }
+      @media (min-width: 860px) {
+        .grid { grid-template-columns: 1fr 26.5rem; align-items: start; }
+      }
+      @media (max-width: 520px) {
+        .mast .k { justify-content: center; flex-wrap: wrap; gap: 0.4rem; }
       }
     </style>
   </head>
   <body>
-    <div class="band">
-      <div class="band-inner">
-        <div class="mark">Event Contracts Anywhere</div>
-        <h1>DreamDEX Event Contracts — in the feed, not another tab</h1>
-        <p>Session wallet · deposit STT + tUSDC · Up/Down on Shannon. Primary surface: Telegram Mini App.</p>
+    <div class="tape" aria-hidden="true">
+      <span>
+        Desk copy · not DreamDEX · host=wire-desk · Shannon 50312 · one script tag ·
+        Desk copy · not DreamDEX · host=wire-desk · Shannon 50312 · one script tag ·
+      </span>
+    </div>
+    <div class="mast">
+      <div class="k">
+        <span>Vol. 12</span>
+        <span>11 Sep 2026</span>
+        <span>Late city</span>
+      </div>
+      <h1>The Wire Desk</h1>
+    </div>
+    <div class="rail">
+      <span>Shannon 50312</span>
+      <span>Host = wire-desk</span>
+      <span>The slip never leaves this page</span>
+    </div>
+    <div class="grid">
+      <div class="col">
+        <div class="stamp">In the story</div>
+        <h2>Bitcoin’s next print — decide without leaving the copy</h2>
+        <p class="by">Markets desk · the reader does not open a destination app</p>
+        <p>
+          This is a publisher page. The ticket on the right is the product:
+          a DreamDEX Event Contract slip dropped into someone else’s layout.
+        </p>
+        <p>
+          Same card a Telegram or Discord message can open. Session wallet on
+          the reader’s device. They fund. Up or Down hits the live book.
+          Attribution stays on this host id.
+        </p>
+        <p>
+          The empty book is a distribution problem. The fill still settles on
+          Shannon. The reader never had to go there.
+        </p>
+      </div>
+      <div class="slot">
+        <div class="tag">On this page</div>
+        <script src="/w.js" data-host="wire-desk" data-market="BTC" data-peek="trade"></script>
       </div>
     </div>
-    <article>
-      <div class="meta">Demo desk · not financial advice · chain 50312</div>
-      <p class="lede">
-        Primary product is Telegram (/tma): the app creates your session wallet,
-        you fund it, then trade. This page shows the same widget embedded in a
-        publisher-style surface.
-      </p>
-      <div class="widget-slot">
-        <script src="/w.js" data-host="wire-desk" data-market="BTC" data-src="/"></script>
-      </div>
-      <p>
-        This page stands in for a publisher or Telegram surface. Embed the same
-        widget with a script tag; hosts earn from routed volume in a later build.
-      </p>
-    </article>
-    <footer>Hackathon MVP · DreamDEX Event Contracts · Somnia Shannon</footer>
+    <footer>
+      <span>Anywhere embed · not financial advice</span>
+      <a href="/">Back to the extra</a>
+    </footer>
   </body>
 </html>

@@ -4,9 +4,13 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @eca/widget build",
   "outputDirectory": "packages/widget/dist",
+  "functions": {
+    "api/faucet.ts": { "maxDuration": 30 }
+  },
   "rewrites": [
+    { "source": "/slip", "destination": "/slip/index.html" },
     { "source": "/demo", "destination": "/demo/index.html" },
     { "source": "/tma", "destination": "/tma/index.html" },
-    { "source": "/home", "destination": "/home/index.html" }
+    { "source": "/home", "destination": "/index.html" }
   ]
 }
