@@ -9,6 +9,8 @@ Embeddable Up/Down Event Contract widget for Somnia Shannon testnet (DreamDEX / 
 
 | | |
 |--|--|
+| **Live demo** | https://event-contracts-anywhere.vercel.app/demo/ |
+| **Widget** | https://event-contracts-anywhere.vercel.app/ |
 | Repo | https://github.com/CemAyyildiz/event-contracts-anywhere |
 | DoraHacks | https://dorahacks.io/hackathon/event-contracts/detail |
 | Docs | [prd](docs/prd.md) · [architecture](docs/architecture.md) · [spike](docs/spike.md) · [SDK feedback](docs/sdk-feedback.md) · [pitch outline](docs/pitch-deck-outline.md) |
