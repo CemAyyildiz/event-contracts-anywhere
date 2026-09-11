@@ -1,4 +1,4 @@
-# Event Contracts Anywhere — Product Requirements Document (BMAD)
+# Anywhere — Product Requirements
 
 > Source of truth for MVP. Supersedes v0.1 where they conflict.  
 > Hackathon: Somnia × DreamDEX Event Contracts · Shannon (50312) · submit 2026-09-11 21:00.

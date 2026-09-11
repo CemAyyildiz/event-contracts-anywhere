@@ -1,6 +1,6 @@
 # SDK & Documentation Feedback Report
 
-**Project:** Event Contracts Anywhere  
+**Project:** Anywhere  
 **Hackathon:** Somnia × DreamDEX Event Contracts (DoraHacks)  
 **SDK:** `@somnia-chain/markets-sdk` ^0.29.0  
 **Date:** 2026-09-10
@@ -10,7 +10,7 @@
 1. **Unified exchange API** — `loadMarkets`, `fetchOrderBook` / `watchOrderBook`, `createOrder`, `mintSet`, `redeem`, and `trader.faucet()` were enough to build a full consumer trade loop without custom ABI glue for the happy path.
 2. **Shannon testnet parity** — `somniaShannon` + `SOMNIA_TESTNET_ADDRESSES` + `https://dev.smk.somnia.host/v1/graphql` behaved consistently; short-window BTC/ETH Event Contracts resolve on a ~1 minute cadence, which is ideal for demos.
 3. **Human units + IOC** — DreamDEX docs’ IOC + touch-cross recipe (`ask + 0.02`) filled thin books in practice; `realtime_sendRawTransaction` made write latency feel “product-like.”
-4. **Types & docs** — Package types + Event Contracts developer page unblocked Epic 1 spikes quickly (`spike:markets` → live GO in one session).
+4. **Types & docs** — Package types + Event Contracts developer page were enough to hit a live GO on Shannon in one session.
 
 ## Friction / gaps
 

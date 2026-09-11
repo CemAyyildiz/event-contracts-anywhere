@@ -1,8 +1,6 @@
-# Event Contracts Anywhere — Architecture
+# Anywhere — Architecture
 
-> Hackathon MVP. Source: `docs/prd.md` **v0.2** (correct course 2026-09-10).  
-> Network: Shannon testnet · chain `50312`.  
-> Status: **MVP = client-only** (`trade-core` + `widget`). Sponsor, indexer, dashboard, contracts are **post-MVP**.
+Client-only MVP on Somnia Shannon (`50312`): `trade-core` + `widget`. Sponsor, indexer, dashboard, and contracts are post-MVP.
 
 ## 0. Correct course (2026-09-10)
 

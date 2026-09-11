@@ -41,9 +41,13 @@ npm-debug.log*
 *.sqlite-journal
 .local/
 
-# BMAD / agent scratch (keep planning artifacts tracked when intentional)
-_bmad-output/**/*.tmp
-_bmad-output/**/.memlog.md
+# BMAD / agent scratch — keep local, never publish
+.agents/
+_bmad/
+_bmad-output/
+docs/buidl.md
+docs/sprint-status.yaml
+docs/pitch-deck-outline.md
 
 # Test / tool caches
 .cache/

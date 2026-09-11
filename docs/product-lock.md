@@ -6,18 +6,12 @@
 
 | | |
 |---|---|
-| **Say this** | **Anywhere** |
-| **Never say** | ECA, EventContractsAnywhere, “the widget”, “the bot” |
+| **Name** | **Anywhere** |
 | **Tagline** | The window is live. Drop it on their page. |
-| **Category** | DreamDEX Event Contracts (not the product name) |
-| **Repo / URL** | `event-contracts-anywhere` — do not rename on deadline day |
+| **Category** | DreamDEX Event Contracts |
 | **Mark** | Gold window, slip inside, live pip. Dark `#070709`, gold `#e8d5a3`, up `#34d399` |
-| **Logo (square)** | `packages/widget/public/logo-512.png` |
-| **Lockup** | `packages/widget/public/brand/lockup.png` |
-| **Cover / OG** | `packages/widget/public/og.png` |
 
-DoraHacks **Name** field: `Anywhere`.  
-DoraHacks **Tagline**: `The DreamDEX window, on the page they were already on.`
+Do not call it ECA, a bot, or a destination.
 
 ## Thesis
 

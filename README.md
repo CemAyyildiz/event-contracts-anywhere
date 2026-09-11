@@ -4,21 +4,11 @@
   <img src="packages/widget/public/logo-512.png" width="128" alt="Anywhere" />
 </p>
 
-DreamDEX Event Contracts as a **slip** you drop into a page or a chat. Not a destination bot.
+A DreamDEX Event Contract slip you drop onto someone else’s page or chat. The reader never leaves. Up or Down still hits the live Shannon book.
 
-**Hackathon:** Somnia × DreamDEX Event Contracts · DoraHacks  
-**Deadline:** 2026-09-11 21:00  
 **Live:** https://event-contracts-anywhere.vercel.app/
 
-## Jury demo (90 seconds)
-
-1. Open `/` — the window is live; we drop it on their page. Scroll **Surfaces**: web, chat, TMA live; Discord / TG channels soon.
-2. **Watch it in a page** → `/demo/` — same slip inside someone else’s layout.
-3. On the slip: Up or Down (showcase auto-funds **1 STT + 1 tUSDC**). Wait for the tape + Shannon explorer link.
-4. Address chip → **Send** — paste any `0x`, all tUSDC leaves the session wallet. No connect.
-5. **Steal the snippet** — host id + market. Copied `<script>` has no demo flags: third-party readers see Get faucet. `?host=` is attribution, not a payout.
-
-Chat drop-in: `https://event-contracts-anywhere.vercel.app/slip/?host=YOUR_DESK&market=BTC`
+## Drop-in
 
 ```html
 <script
@@ -28,10 +18,14 @@ Chat drop-in: `https://event-contracts-anywhere.vercel.app/slip/?host=YOUR_DESK&
 ></script>
 ```
 
-If the window has ≤60s left, wait for the next print. Do not claim host fees.
+Chat: `https://event-contracts-anywhere.vercel.app/slip/?host=YOUR_DESK&market=BTC`
 
-Docs: [prd v0.2](docs/prd.md) · [product lock](docs/product-lock.md) · [architecture](docs/architecture.md) · [BUIDL paste](docs/buidl.md)
+Same card at `/demo/` (host page) and `/tma/` (Telegram WebView). Session wallet prints on the device. Showcase auto-funds 1 STT + 1 tUSDC; third-party embeds keep Get faucet. After a fill, Send moves tUSDC to any `0x`. `?host=` tags the fill — payouts are next, not this build.
+
+If the window has ≤60s left, wait for the next print.
+
+Somnia Shannon (`50312`) · `@somnia-chain/markets-sdk`
 
 ## License
 
-MIT (intended).
+MIT
