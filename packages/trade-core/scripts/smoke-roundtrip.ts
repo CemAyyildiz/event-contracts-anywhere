@@ -167,6 +167,7 @@ After funding:
     market,
     side,
     sizeUsdc: size,
+    hostId: process.env.HOST_ID ?? "wire-desk",
   });
   console.log("buyGuaranteed:", fill);
 

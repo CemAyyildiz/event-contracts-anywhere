@@ -70,7 +70,13 @@ export function Desk() {
         throw new Error(data.error || "desk failed");
       }
       setTape(data.tape);
-      if (data.warning) setError(data.warning);
+      if (data.warning) {
+        setError(
+          /abort|timeout|unreachable|504|503/i.test(data.warning)
+            ? "Indexer is slow. Tag is live. Make a fill, then paste the tx below to decode userData from the receipt."
+            : data.warning,
+        );
+      }
       const next = new URL(window.location.href);
       next.searchParams.set("host", hostId);
       window.history.replaceState(null, "", next);
