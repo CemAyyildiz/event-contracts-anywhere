@@ -1,10 +1,10 @@
-# Event Contracts Anywhere
+# Anywhere
 
 <p align="center">
-  <img src="packages/widget/public/logo-512.png" width="128" alt="Anywhere — window with the slip inside" />
+  <img src="packages/widget/public/logo-512.png" width="128" alt="Anywhere" />
 </p>
 
-A DreamDEX Event Contract **slip** you drop into a page or a chat. Not a destination bot.
+DreamDEX Event Contracts as a **slip** you drop into a page or a chat. Not a destination bot.
 
 **Hackathon:** Somnia × DreamDEX Event Contracts · DoraHacks  
 **Deadline:** 2026-09-11 21:00  
@@ -30,7 +30,7 @@ Chat drop-in: `https://event-contracts-anywhere.vercel.app/slip/?host=YOUR_DESK&
 
 If the window has ≤60s left, wait for the next print. Do not claim host fees.
 
-Docs: [prd v0.2](docs/prd.md) · [product lock](docs/product-lock.md) · [architecture](docs/architecture.md)
+Docs: [prd v0.2](docs/prd.md) · [product lock](docs/product-lock.md) · [architecture](docs/architecture.md) · [BUIDL paste](docs/buidl.md)
 
 ## License
 

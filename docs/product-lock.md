@@ -1,6 +1,23 @@
-# Product lock — Event Contracts Anywhere
+# Product lock — Anywhere
 
-**Locked:** 2026-09-10 · **PRD:** `docs/prd.md` v0.2
+**Locked:** 2026-09-10 · **Brand:** 2026-09-11 · **PRD:** `docs/prd.md` v0.2
+
+## Brand
+
+| | |
+|---|---|
+| **Say this** | **Anywhere** |
+| **Never say** | ECA, EventContractsAnywhere, “the widget”, “the bot” |
+| **Tagline** | The window is live. Drop it on their page. |
+| **Category** | DreamDEX Event Contracts (not the product name) |
+| **Repo / URL** | `event-contracts-anywhere` — do not rename on deadline day |
+| **Mark** | Gold window, slip inside, live pip. Dark `#070709`, gold `#e8d5a3`, up `#34d399` |
+| **Logo (square)** | `packages/widget/public/logo-512.png` |
+| **Lockup** | `packages/widget/public/brand/lockup.png` |
+| **Cover / OG** | `packages/widget/public/og.png` |
+
+DoraHacks **Name** field: `Anywhere`.  
+DoraHacks **Tagline**: `The DreamDEX window, on the page they were already on.`
 
 ## Thesis
 

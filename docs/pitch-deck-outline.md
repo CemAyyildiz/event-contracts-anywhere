@@ -1,10 +1,10 @@
-# Pitch Deck Outline — Event Contracts Anywhere
+# Pitch Deck Outline — Anywhere
 
 **Length:** 8 slides · **Demo:** `/` live slip → `/demo/` embed → Up/Down → explorer → Send
 
 ## Slide 1 — Title
-**Event Contracts Anywhere**  
-The DreamDEX slip, on someone else’s page.  
+**Anywhere**  
+The DreamDEX window, on the page they were already on.  
 Somnia × DreamDEX Hackathon · Shannon testnet
 
 ## Slide 2 — Problem

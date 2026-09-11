@@ -48,3 +48,4 @@ png(resolve(pub, "brand/icon.svg"), resolve(pub, "logo-192.png"), 192);
 png(resolve(pub, "brand/icon.svg"), resolve(pub, "apple-touch-icon.png"), 180);
 png(resolve(pub, "favicon.svg"), resolve(pub, "favicon-32.png"), 32);
 png(resolve(pub, "brand/og.svg"), resolve(pub, "og.png"), 1200);
+png(resolve(pub, "brand/lockup.svg"), resolve(pub, "brand/lockup.png"), 720);
