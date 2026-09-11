@@ -68,11 +68,12 @@ export default defineConfig({
         manualChunks: {
           "vendor-sdk": ["@somnia-chain/markets-sdk"],
           "vendor-viem": ["viem"],
+          "vendor-motion": ["motion"],
         },
       },
     },
   },
   optimizeDeps: {
-    include: ["@eca/trade-core", "@somnia-chain/markets-sdk", "viem"],
+    include: ["@eca/trade-core", "@somnia-chain/markets-sdk", "viem", "motion"],
   },
 });
