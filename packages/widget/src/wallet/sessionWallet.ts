@@ -10,15 +10,34 @@ export type SessionWallet = {
 };
 
 type TgCloud = {
-  getItem: (key: string, cb: (v: string | null) => void) => void;
-  setItem: (key: string, value: string, cb?: (ok: boolean) => void) => void;
+  getItem: (
+    key: string,
+    cb: (err: unknown, value?: string | null) => void,
+  ) => void;
+  setItem: (
+    key: string,
+    value: string,
+    cb?: (err: unknown, ok?: boolean) => void,
+  ) => void;
 };
+
+const CLOUD_MS = 600;
 
 function getTgCloud(): TgCloud | null {
   const w = window as unknown as {
     Telegram?: { WebApp?: { CloudStorage?: TgCloud } };
   };
   return w.Telegram?.WebApp?.CloudStorage ?? null;
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const t = window.setTimeout(() => resolve(fallback), ms);
+    void p.then((v) => {
+      window.clearTimeout(t);
+      resolve(v);
+    });
+  });
 }
 
 function readLocal(): SessionWallet | null {
@@ -34,7 +53,11 @@ function readLocal(): SessionWallet | null {
 }
 
 function writeLocal(w: SessionWallet) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(w));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(w));
+  } catch {
+    /* Telegram WebView can block storage; wallet still lives in memory. */
+  }
 }
 
 function createWallet(): SessionWallet {
@@ -50,25 +73,30 @@ function createWallet(): SessionWallet {
 function cloudGet(key: string): Promise<string | null> {
   const cloud = getTgCloud();
   if (!cloud) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    try {
-      cloud.getItem(key, (v) => resolve(v ?? null));
-    } catch {
-      resolve(null);
-    }
-  });
+  return withTimeout(
+    new Promise((resolve) => {
+      try {
+        cloud.getItem(key, (err, value) => {
+          if (err) resolve(null);
+          else resolve(value ?? null);
+        });
+      } catch {
+        resolve(null);
+      }
+    }),
+    CLOUD_MS,
+    null,
+  );
 }
 
-function cloudSet(key: string, value: string): Promise<void> {
+function cloudSet(key: string, value: string): void {
   const cloud = getTgCloud();
-  if (!cloud) return Promise.resolve();
-  return new Promise((resolve) => {
-    try {
-      cloud.setItem(key, value, () => resolve());
-    } catch {
-      resolve();
-    }
-  });
+  if (!cloud) return;
+  try {
+    cloud.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Load or create the user's session wallet (Telegram CloudStorage → localStorage). */
@@ -88,13 +116,13 @@ export async function ensureSessionWallet(): Promise<SessionWallet> {
 
   const local = readLocal();
   if (local) {
-    await cloudSet(STORAGE_KEY, JSON.stringify(local));
+    cloudSet(STORAGE_KEY, JSON.stringify(local));
     return local;
   }
 
   const fresh = createWallet();
   writeLocal(fresh);
-  await cloudSet(STORAGE_KEY, JSON.stringify(fresh));
+  cloudSet(STORAGE_KEY, JSON.stringify(fresh));
   return fresh;
 }
 

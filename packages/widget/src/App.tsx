@@ -96,18 +96,28 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      await loadTelegramScript();
-      if (cancelled) return;
-      const tg = initTelegram();
-      setIsTelegram(tg.isTelegram || base.surface === "tma");
-      if (tg.startHost) setHostId(tg.startHost);
+      try {
+        await loadTelegramScript();
+        if (cancelled) return;
+        const tg = initTelegram();
+        setIsTelegram(tg.isTelegram || base.surface === "tma");
+        if (tg.startHost) setHostId(tg.startHost);
 
-      const before = localStorage.getItem("eca.session.wallet.v1");
-      const w = await ensureSessionWallet();
-      if (cancelled) return;
-      setIsNewWallet(!before);
-      setWallet(w);
-      setScreen(showcase ? "trade" : "fund");
+        let before: string | null = null;
+        try {
+          before = localStorage.getItem("eca.session.wallet.v1");
+        } catch {
+          before = null;
+        }
+        const w = await ensureSessionWallet();
+        if (cancelled) return;
+        setIsNewWallet(!before);
+        setWallet(w);
+        setScreen(showcase ? "trade" : "fund");
+      } catch {
+        if (cancelled) return;
+        setStatusText("Could not print a wallet on this device.");
+      }
     })();
     return () => {
       cancelled = true;
