@@ -50,3 +50,4 @@ _bmad-output/**/.memlog.md
 playwright-report/
 test-results/
 .vercel
+packages/widget/.brand-fonts/

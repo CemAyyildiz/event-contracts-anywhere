@@ -12,7 +12,9 @@ import { privateKeyToAccount } from "viem/accounts";
 
 const RPC = "https://dream-rpc.somnia.network";
 const TUSDC = "0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E";
-const STT_DRIP = parseEther("0.01");
+// SDK privateKey writes lock gas=10M × 60 gwei = 0.6 STT per tx (unused refunded).
+// 0.01 STT made approve look like "Missing or invalid parameters".
+const STT_DRIP = parseEther("1");
 const TUSDC_DRIP = parseUnits("1", 6);
 
 const shannon = defineChain({
@@ -82,7 +84,7 @@ export async function dripTo(address, rawKey) {
   if (!sendStt && !sendTusdc) {
     return { ok: true, status: 200, skipped: true };
   }
-  if (sendStt && faucetStt < STT_DRIP + parseEther("0.002")) {
+  if (sendStt && faucetStt < STT_DRIP + parseEther("0.02")) {
     return { ok: false, status: 503, error: "Faucet STT is empty" };
   }
   if (sendTusdc && faucetTusdc < TUSDC_DRIP) {

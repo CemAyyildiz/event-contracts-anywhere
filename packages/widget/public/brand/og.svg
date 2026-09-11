@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#070709"/>
+  <defs>
+    <radialGradient id="gold" cx="18%" cy="8%" r="58%">
+      <stop offset="0%" stop-color="#e8d5a3" stop-opacity=".2"/>
+      <stop offset="100%" stop-color="#e8d5a3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="up" cx="88%" cy="86%" r="46%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity=".12"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <g id="mark">
+      <rect x="3.5" y="3.5" width="25" height="25" rx="7.25" stroke="#e8d5a3" stroke-width="1.5"/>
+      <rect x="12.25" y="8.25" width="13.25" height="17.25" rx="3.4" fill="#e8d5a3" fill-opacity=".1" stroke="#e8d5a3" stroke-width="1.35"/>
+      <path d="M15.4 12.1h7.1M15.4 14.85h4.6" stroke="#e8d5a3" stroke-opacity=".4" stroke-width="1.15" stroke-linecap="round"/>
+      <circle cx="23.35" cy="10.35" r="1.45" fill="#34d399"/>
+    </g>
+  </defs>
+  <rect width="1200" height="630" fill="url(#gold)"/>
+  <rect width="1200" height="630" fill="url(#up)"/>
+  <use href="#mark" transform="translate(742 78) scale(11.2)" opacity=".95"/>
+  <g transform="translate(88 156)">
+    <use href="#mark" transform="scale(1.25)"/>
+    <text x="48" y="27" fill="#f7f7f8" font-family="'Inter'" font-size="22" font-weight="600">Anywhere</text>
+    <text x="0" y="148" fill="#f7f7f8" font-family="'Instrument Serif'" font-size="54">The window is live.</text>
+    <text x="0" y="216" fill="#e8d5a3" font-family="'Instrument Serif'" font-size="54">Drop it on their page.</text>
+    <text x="0" y="292" fill="#9b9ba8" font-family="'Inter'" font-size="17">DreamDEX Event Contracts  /  Somnia Shannon</text>
+  </g>
+</svg>

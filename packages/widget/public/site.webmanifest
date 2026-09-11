@@ -1,0 +1,13 @@
+{
+  "name": "Anywhere",
+  "short_name": "Anywhere",
+  "description": "The DreamDEX Event Contract slip you drop on someone else's page.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070709",
+  "theme_color": "#070709",
+  "icons": [
+    { "src": "/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

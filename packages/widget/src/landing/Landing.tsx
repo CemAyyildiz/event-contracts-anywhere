@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { BrandMark } from "../brand/Mark";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -57,7 +58,7 @@ function TiltFrame({ children }: { children: ReactNode }) {
 }
 
 function SlipEmbed({ host, market, peek }: { host: string; market: string; peek?: boolean }) {
-  const src = `/slip/?host=${encodeURIComponent(host)}&market=${encodeURIComponent(market)}${peek ? "&peek=trade" : ""}`;
+  const src = `/slip/?host=${encodeURIComponent(host)}&market=${encodeURIComponent(market)}${peek ? "&peek=trade&demo=1" : ""}`;
   return (
     <iframe
       title="Anywhere slip"
@@ -66,6 +67,45 @@ function SlipEmbed({ host, market, peek }: { host: string; market: string; peek?
     />
   );
 }
+
+const SURFACES = [
+  {
+    name: "Any webpage",
+    status: "live" as const,
+    href: "/demo/",
+    blurb: "One script tag. The article stays open. Up still hits Shannon.",
+  },
+  {
+    name: "Chat URL",
+    status: "live" as const,
+    href: "/slip/?host=jury&market=BTC&peek=trade&demo=1",
+    blurb: "Paste in iMessage, WhatsApp, Telegram. Same card, same book.",
+  },
+  {
+    name: "Telegram Mini App",
+    status: "live" as const,
+    href: "/tma/?host=jury&market=BTC&peek=trade&demo=1",
+    blurb: "Full-bleed WebView. Not a destination bot — the chat was already the desk.",
+  },
+  {
+    name: "Discord channels",
+    status: "soon" as const,
+    href: null,
+    blurb: "Drop the window into a channel Activity. Readers never leave the server.",
+  },
+  {
+    name: "Telegram channels",
+    status: "soon" as const,
+    href: null,
+    blurb: "Pin the live window where the feed already is.",
+  },
+  {
+    name: "Host payouts",
+    status: "next" as const,
+    href: null,
+    blurb: "Once the fill is everywhere, the desk can claim. Attribution ships today.",
+  },
+];
 
 export function Landing() {
   const [host, setHost] = useState("wire-desk");
@@ -86,9 +126,9 @@ export function Landing() {
 
   const words = useMemo(
     () => [
-      ["The", "book", "is", "empty"],
-      ["because", "nobody"],
-      ["goes", "there"],
+      ["The", "window", "is", "live"],
+      ["Drop", "it", "on"],
+      ["their", "page"],
     ],
     [],
   );
@@ -113,13 +153,27 @@ export function Landing() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease }}
       >
-        <div className="brand">Anywhere</div>
+        <a
+          className="brand"
+          href="/"
+          onClick={(e) => {
+            if (window.location.pathname === "/" || window.location.pathname === "") {
+              e.preventDefault();
+              window.history.replaceState(null, "", "/");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+        >
+          <BrandMark size={22} />
+          Anywhere
+        </a>
         <nav className="nav-links">
           <a className="hide" href="#how">How</a>
+          <a className="hide" href="#surfaces">Surfaces</a>
           <a className="hide" href="#take">Snippet</a>
           <a href="/demo/">In a page</a>
           <span className="live"><i className="dot" />Shannon</span>
-          <a className="pill" href="/slip/?host=jury&market=BTC">Open slip</a>
+          <a className="pill" href="/slip/?host=jury&market=BTC&peek=trade&demo=1">Open slip</a>
         </nav>
       </motion.header>
 
@@ -131,21 +185,21 @@ export function Landing() {
           <h1 className="headline">
             {words.map((line, i) => (
               <span key={i} style={{ display: "block" }}>
-                {line.map((w) => (
+                {line.map((w, j) => (
                   <motion.span
-                    key={w}
+                    key={`${i}-${j}-${w}`}
                     variants={fade}
                     style={{ display: "inline-block", marginRight: "0.28em" }}
                   >
-                    {w === "goes" ? <em>{w}</em> : w}
+                    {w === "page" ? <em>{w}</em> : w}
                   </motion.span>
                 ))}
               </span>
             ))}
           </h1>
           <motion.p className="lede" variants={fade}>
-            One script. The reader never opens DreamDEX. Up or Down still
-            hits the live Shannon book — from the page they were already on.
+            One script. A live DreamDEX window, on the page they were already
+            reading. Up or Down still hits Shannon.
           </motion.p>
           <motion.div className="ctas" variants={fade}>
             <a className="cta primary" href="/demo/">Watch it in a page</a>
@@ -178,8 +232,8 @@ export function Landing() {
         transition={{ duration: 0.8, ease }}
       >
         <div><b>50312</b><span>Shannon · live windows</span></div>
-        <div><b>IOC / mint</b><span>Thin-book guaranteed fill</span></div>
-        <div><b>?host=</b><span>Every fill named to a desk</span></div>
+        <div><b>Session EOA</b><span>No connect · keys on device</span></div>
+        <div><b>?host=</b><span>Fill tagged to the desk</span></div>
       </motion.div>
 
       <section className="section" id="how">
@@ -219,9 +273,9 @@ export function Landing() {
             <ol>
               <li>Slip already on the page</li>
               <li>Wallet prints on device</li>
-              <li>Get faucet</li>
+              <li>Faucet 1 STT + 1 tUSDC</li>
               <li>Up or Down</li>
-              <li>Explorer proof</li>
+              <li>Send PnL to your address</li>
             </ol>
           </motion.article>
         </div>
@@ -232,9 +286,50 @@ export function Landing() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          Host picks an id, pastes a script or a URL. Reader stays put. Telegram Mini App is
-          plumbing for a full-screen chat link — not the front door.
+          Host picks an id, pastes a script or a URL. Reader stays put.
+          <code>?host=</code> tags the fill — payouts are next, not this demo.
         </motion.p>
+      </section>
+
+      <section className="section" id="surfaces">
+        <motion.h2
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease }}
+        >
+          Same slip. Every surface.
+        </motion.h2>
+        <motion.p
+          className="lede"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          The window stays on Shannon. The desk is whoever already has the reader.
+        </motion.p>
+        <div className="surfaces">
+          {SURFACES.map((s, i) => (
+            <motion.article
+              key={s.name}
+              className={`surface on-${s.status}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: i * 0.05, ease }}
+            >
+              <div className="surface-top">
+                <span className={`badge ${s.status}`}>{s.status}</span>
+                {s.href ? (
+                  <a href={s.href}>{s.name}</a>
+                ) : (
+                  <b>{s.name}</b>
+                )}
+              </div>
+              <p>{s.blurb}</p>
+            </motion.article>
+          ))}
+        </div>
       </section>
 
       <section className="section" id="take">

@@ -19,6 +19,7 @@
 3. **Redeem on losing side** — Post-resolution `redeem` throws `InsufficientBalance` when the held outcome lost. Returning a typed “nothing to redeem” (or documenting it) would simplify consumer UIs.
 4. **DreamDEX REST vs EC** — HTTP API is spot-only; EC is SDK-only. Worth a one-line callout on every DreamDEX API page so teams don’t waste a day on REST for Event Contracts.
 5. **Indexer lag vs on-chain gate** — Docs correctly say gate writes on `getMarketOnchain`; we relied on that. More sample code showing “TTL &lt; 60s → successor market” would match rolling EC windows.
+6. **Fixed 10M gas envelope** — `privateKey` writes lock `DEFAULT_GAS` (10M) × 60 gwei = **0.6 STT** before the mempool admits the tx. Unused gas is refunded, but a 0.01 STT faucet makes `approve` look like viem’s “Missing or invalid parameters.” Call this out next to `trader.faucet()` / STT ordering.
 
 ## Suggestions
 

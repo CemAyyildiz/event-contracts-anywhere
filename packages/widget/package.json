@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "brand:raster": "node scripts/raster-brand.mjs"
   },
   "dependencies": {
     "@eca/trade-core": "workspace:*",
@@ -17,6 +18,7 @@
     "viem": "^2.37.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.7.0",

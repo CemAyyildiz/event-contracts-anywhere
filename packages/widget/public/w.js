@@ -13,6 +13,7 @@
     "&market=" +
     encodeURIComponent(market);
   if (peek) iframeSrc += "&peek=" + encodeURIComponent(peek);
+  if (s.getAttribute("data-demo") === "1") iframeSrc += "&demo=1";
 
   var wrap = document.createElement("div");
   wrap.setAttribute("data-eca-embed", "1");

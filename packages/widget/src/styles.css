@@ -78,11 +78,15 @@ a {
 }
 
 .mark {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: -0.03em;
   line-height: 1;
 }
+.mark svg { display: block; flex-shrink: 0; }
 
 .mark span {
   color: var(--mute);
@@ -260,6 +264,52 @@ a {
   color: var(--mute);
   line-height: 1.4;
   word-break: break-all;
+}
+
+.send {
+  margin: 0.85rem 0 0.7rem;
+  padding: 0.8rem 0.85rem 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.send .label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 0.25rem;
+}
+
+.send p {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--mute);
+}
+
+.send input {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.72rem 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  outline: none;
+}
+
+.send input:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.send input::placeholder {
+  color: #52525b;
 }
 
 .key-box {

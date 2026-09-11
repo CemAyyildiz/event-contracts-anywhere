@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buyGuaranteed, redeem, TradeCoreError } from "@eca/trade-core";
 import type { Address, Hex } from "viem";
+import { parseEther } from "viem";
 import { MiniChart } from "./MiniChart";
 import { loadBets, pushBet, type BetRecord } from "./history";
 import { useTradeSession } from "./useTradeSession";
@@ -10,15 +11,19 @@ import {
   type SessionWallet,
 } from "./wallet/sessionWallet";
 import { fetchBalances } from "./wallet/balances";
+import { sendAllTusdc } from "./wallet/send";
 import {
   initTelegram,
   loadTelegramScript,
   setTelegramMainButton,
   tgHaptic,
 } from "./telegram";
+import { BrandMark } from "./brand/Mark";
 
 const EXPLORER_TX = "https://shannon-explorer.somnia.network/tx/";
 const EXPLORER_ADDR = "https://shannon-explorer.somnia.network/address/";
+/** SDK privateKey path: 10M gas × 60 gwei. Unused refunded; mempool still requires the envelope. */
+const SDK_GAS_ENVELOPE = parseEther("0.6");
 
 function params() {
   const q = new URLSearchParams(window.location.search);
@@ -27,6 +32,7 @@ function params() {
     asset: (q.get("market") || "BTC").toUpperCase(),
     surface: q.get("surface") || "web",
     peek: q.get("peek"),
+    demo: q.get("demo") === "1",
   };
 }
 
@@ -51,6 +57,7 @@ export function App() {
   const base = useMemo(() => params(), []);
   const [hostId, setHostId] = useState(base.hostId);
   const asset = base.asset;
+  const showcase = base.peek === "trade" || base.demo;
 
   const [wallet, setWallet] = useState<SessionWallet | null>(null);
   const [screen, setScreen] = useState<Screen>("boot");
@@ -65,6 +72,10 @@ export function App() {
   const [showKey, setShowKey] = useState(false);
   const [isNewWallet, setIsNewWallet] = useState(false);
   const [fauceting, setFauceting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendTo, setSendTo] = useState("");
+  const autoFundTried = useRef(false);
+  const stayOnFund = useRef(false);
 
   const privateKey = wallet?.privateKey as Hex | undefined;
   const { exchange, market, book, ticks, error, ready, setError } =
@@ -96,7 +107,7 @@ export function App() {
       if (cancelled) return;
       setIsNewWallet(!before);
       setWallet(w);
-      setScreen(base.peek === "trade" ? "trade" : "fund");
+      setScreen(showcase ? "trade" : "fund");
     })();
     return () => {
       cancelled = true;
@@ -116,10 +127,11 @@ export function App() {
     return () => clearInterval(t);
   }, [wallet]);
 
-  // Returning funded users skip straight to trade
+  // Returning funded users skip faucet — but not after they open Fund to send.
   useEffect(() => {
+    if (stayOnFund.current) return;
     if (!wallet || !bal || screen !== "fund") return;
-    if (bal.stt > 0n && bal.tusdc > 0n && !isNewWallet) {
+    if (bal.stt >= SDK_GAS_ENVELOPE && bal.tusdc > 0n && !isNewWallet) {
       setScreen("trade");
     }
   }, [wallet, bal, screen, isNewWallet]);
@@ -142,17 +154,25 @@ export function App() {
     const ro = new ResizeObserver(report);
     ro.observe(document.documentElement);
     return () => ro.disconnect();
-  }, [screen, phase, showHistory, statusText, bets.length, lastTx, bal, showKey]);
+  }, [screen, phase, showHistory, statusText, bets.length, lastTx, bal, showKey, sendTo, sending]);
 
   const ttlSec = market
     ? Math.max(0, Math.floor((market.expiryMs - now) / 1000))
     : null;
 
-  const fundedEnough = bal != null && bal.stt > 0n && bal.tusdc > 0n;
+  const fundedEnough =
+    bal != null && bal.stt >= SDK_GAS_ENVELOPE && bal.tusdc > 0n;
 
   function goTrade() {
+    stayOnFund.current = false;
     setScreen("trade");
     setStatusText("Pick Up or Down — PnL settles to your address.");
+    tgHaptic("light");
+  }
+
+  function goFund() {
+    stayOnFund.current = true;
+    setScreen("fund");
     tgHaptic("light");
   }
 
@@ -216,10 +236,10 @@ export function App() {
   }, [phase, exchange, openBet, market, wallet]);
 
   async function getFaucet() {
-    if (!wallet || fauceting) return;
+    if (!wallet || fauceting) return false;
     setFauceting(true);
     setError(null);
-    setStatusText("Sending 0.01 STT + 1 tUSDC…");
+    setStatusText("Sending 1 STT + 1 tUSDC…");
     try {
       const res = await fetch("/api/faucet", {
         method: "POST",
@@ -237,23 +257,30 @@ export function App() {
         throw new Error(data.error || "Faucet failed");
       }
       setLastTx(data.tusdcHash ?? data.sttHash ?? null);
-      setStatusText(
-        data.skipped ? "Already funded" : "Faucet sent — one tap worth",
-      );
       tgHaptic("success");
       const next = await refreshBal(wallet.address);
-      if (next && next.stt > 0n && next.tusdc > 0n) {
+      const ok = Boolean(next && next.stt > 0n && next.tusdc > 0n);
+      if (ok) {
         setScreen("trade");
         setStatusText("Pick Up or Down — PnL settles to your address.");
       }
+      return ok;
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatusText("Faucet failed");
       tgHaptic("error");
+      return false;
     } finally {
       setFauceting(false);
     }
   }
+
+  useEffect(() => {
+    if (!showcase || !wallet || !bal || fauceting || autoFundTried.current) return;
+    if (bal.stt >= SDK_GAS_ENVELOPE && bal.tusdc > 0n) return;
+    autoFundTried.current = true;
+    void getFaucet();
+  }, [showcase, wallet, bal, fauceting]);
 
   async function onTrade(side: "up" | "down") {
     setError(null);
@@ -262,9 +289,14 @@ export function App() {
       return;
     }
     if (!fundedEnough) {
-      setScreen("fund");
-      setStatusText("Deposit STT + tUSDC first");
-      return;
+      if (!showcase) {
+        setScreen("fund");
+        setStatusText("Deposit STT + tUSDC first");
+        return;
+      }
+      setStatusText("Funding a dust for this tap…");
+      const ok = await getFaucet();
+      if (!ok) return;
     }
     if ((ttlSec ?? 0) <= 60) {
       setStatusText("Window closing — wait for the next print");
@@ -330,16 +362,43 @@ export function App() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const canTrade = ready && phase !== "busy" && phase !== "open";
+  async function onSend() {
+    if (!wallet || sending) return;
+    setSending(true);
+    setError(null);
+    setStatusText("Sending tUSDC…");
+    try {
+      const { hash } = await sendAllTusdc({
+        privateKey: wallet.privateKey,
+        from: wallet.address,
+        to: sendTo.trim(),
+      });
+      setLastTx(hash);
+      setStatusText("Sent — PnL left this slip.");
+      tgHaptic("success");
+      await refreshBal(wallet.address);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatusText("Send failed");
+      tgHaptic("error");
+    } finally {
+      setSending(false);
+    }
+  }
 
-  const stepStt = bal != null && bal.stt > 0n;
+  const canTrade = ready && phase !== "busy" && phase !== "open" && !fauceting;
+
+  const stepStt = bal != null && bal.stt >= SDK_GAS_ENVELOPE;
   const stepTusdc = bal != null && bal.tusdc > 0n;
 
   if (screen === "boot" || !wallet) {
     return (
       <div className="shell">
         <header className="mast">
-          <div className="mark">Anywhere</div>
+          <div className="mark">
+            <BrandMark size={18} />
+            Anywhere
+          </div>
           <div className="tag">Shannon</div>
         </header>
         <div className="tape">
@@ -355,6 +414,7 @@ export function App() {
       <div className="shell">
         <header className="mast">
           <div className="mark">
+            <BrandMark size={18} />
             Anywhere
             <span>via {hostId}</span>
           </div>
@@ -372,8 +432,8 @@ export function App() {
         <div className="kicker">Desk {hostId} · keys stay on this device</div>
         <p className="addr">{shortAddr(wallet.address)}</p>
         <p className="copy">
-          Get faucet sends dust: 0.01 STT for gas and 1 tUSDC for one tap.
-          PnL still lands on this address.
+          Get faucet sends 1 STT (SDK gas envelope) and 1 tUSDC for a tap.
+          PnL lands here. Send it to your own address when you want it.
         </p>
 
         <div className="bals">
@@ -407,6 +467,32 @@ export function App() {
         </div>
 
         <p className="hint">{statusText}</p>
+
+        <div className="send">
+          <div className="label">Send</div>
+          <p>
+            Paste your own wallet. This slip signs — no connect. Sends all tUSDC.
+            Keep a little STT here for gas.
+          </p>
+          <input
+            value={sendTo}
+            onChange={(e) => setSendTo(e.target.value)}
+            placeholder="0x…"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="text"
+            aria-label="Destination address"
+          />
+          <button
+            type="button"
+            className="act act-line"
+            disabled={sending || fauceting || !stepTusdc || !stepStt}
+            onClick={() => void onSend()}
+          >
+            {sending ? "Sending…" : `Send ${bal?.tusdcLabel ?? "—"} tUSDC`}
+          </button>
+        </div>
 
         <button type="button" className="act-text" onClick={() => void copyAddress()}>
           {copied === "addr" ? "Copied" : "Copy address"}
@@ -451,10 +537,11 @@ export function App() {
     <div className="shell">
       <header className="mast">
         <div className="mark">
+          <BrandMark size={18} />
           Anywhere
           <span>{hostId}</span>
         </div>
-        <button type="button" className="wallet" onClick={() => setScreen("fund")}>
+        <button type="button" className="wallet" onClick={goFund}>
           {shortAddr(wallet.address)} · {bal?.tusdcLabel ?? "—"}
         </button>
       </header>
@@ -544,18 +631,23 @@ export function App() {
       </div>
 
       {phase === "settled" && (
-        <button
-          type="button"
-          className="act-text"
-          onClick={() => {
-            setPhase("idle");
-            setOpenBet(null);
-            setLastTx(null);
-            setStatusText("Pick Up or Down — PnL settles to your address.");
-          }}
-        >
-          Next window
-        </button>
+        <>
+          <button
+            type="button"
+            className="act-text"
+            onClick={() => {
+              setPhase("idle");
+              setOpenBet(null);
+              setLastTx(null);
+              setStatusText("Pick Up or Down — PnL settles to your address.");
+            }}
+          >
+            Next window
+          </button>
+          <button type="button" className="act-text" onClick={goFund}>
+            Send tUSDC
+          </button>
+        </>
       )}
 
       <button

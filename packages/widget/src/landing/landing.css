@@ -52,10 +52,16 @@ button { font: inherit; cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-weight: 600;
   letter-spacing: -0.04em;
   font-size: 1.05rem;
+  color: var(--fg);
 }
+.brand svg { display: block; flex-shrink: 0; }
+.brand:hover { color: var(--gold); }
 .nav-links { display: flex; gap: 1.1rem; align-items: center; font-size: 0.88rem; color: var(--muted); }
 .nav-links a:hover { color: var(--fg); }
 .pill {
@@ -233,7 +239,9 @@ button { font: inherit; cursor: pointer; }
   max-width: 1080px;
   margin: 0 auto;
   padding: 4.5rem 1.4rem;
+  scroll-margin-top: 4.6rem;
 }
+.section .lede { max-width: 42ch; margin-bottom: 1.8rem; }
 .section h2 {
   font-family: "Instrument Serif", Georgia, serif;
   font-size: clamp(2rem, 5vw, 3.1rem);
@@ -258,6 +266,65 @@ button { font: inherit; cursor: pointer; }
 .card h3 { margin: 0 0 0.8rem; font-size: 0.95rem; letter-spacing: -0.02em; }
 .card.good h3 { color: var(--up); }
 .card ol { margin: 0; padding-left: 1.1rem; color: var(--muted); line-height: 1.7; }
+
+.surfaces {
+  display: grid;
+  gap: 0.75rem;
+}
+@media (min-width: 720px) {
+  .surfaces { grid-template-columns: 1fr 1fr 1fr; }
+}
+.surface {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.15rem 1.15rem 1.2rem;
+  background: rgba(255,255,255,.03);
+  min-height: 10.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.surface.on-soon, .surface.on-next {
+  background: transparent;
+}
+.surface-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.surface-top b, .surface-top a {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.surface-top a:hover { color: var(--gold); }
+.surface p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.badge {
+  width: fit-content;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+}
+.badge.live {
+  color: #052e1c;
+  background: var(--up);
+}
+.badge.soon {
+  color: var(--gold);
+  border: 1px solid rgba(232, 213, 163, 0.35);
+}
+.badge.next {
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
 
 .take {
   display: grid;
@@ -304,6 +371,7 @@ pre {
 .copy-btn { background: var(--fg); color: #070709; border: 0; }
 .ghost-btn { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 .note { color: var(--muted); max-width: 48ch; line-height: 1.5; }
+.note code { font-family: ui-monospace, "Geist Mono", monospace; color: var(--gold); font-size: 0.92em; }
 .foot {
   border-top: 1px solid var(--line);
   padding: 1.1rem 1.4rem 1.6rem;

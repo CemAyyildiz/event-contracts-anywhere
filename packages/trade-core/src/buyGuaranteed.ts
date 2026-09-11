@@ -36,6 +36,25 @@ function asHash(h: string | undefined): `0x${string}` | null {
   return h as `0x${string}`;
 }
 
+/** Somnia mempool rejections surface as viem "Missing or invalid parameters." */
+function unwrapWrite(e: unknown): string {
+  let cur: unknown = e;
+  let details = "";
+  for (let i = 0; i < 12 && cur && typeof cur === "object"; i++) {
+    const o = cur as { details?: string; message?: string; cause?: unknown };
+    if (typeof o.details === "string" && o.details) details = o.details;
+    if (typeof o.message === "string" && /insufficientBalance|account does not exist|gasPrice/i.test(o.message)) {
+      details = o.message;
+    }
+    cur = o.cause;
+  }
+  const msg = details || (e instanceof Error ? e.message : String(e));
+  if (/insufficientBalance|account does not exist/i.test(msg)) {
+    return `${msg} — SDK writes lock ~0.6 STT as a gas envelope. Need a 1 STT faucet drip.`;
+  }
+  return msg;
+}
+
 async function assertTrading(
   exchange: SomniaMarkets,
   market: TradeableMarket,
@@ -140,8 +159,8 @@ export async function buyGuaranteed(
       }
       // partial → fall through to mint-sell for remainder intent (full size remint path)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (/insufficient|balance|allowance/i.test(msg)) {
+      const msg = unwrapWrite(e);
+      if (/insufficient|balance|allowance|account does not exist/i.test(msg)) {
         throw new TradeCoreError(msg, "InsufficientFunds");
       }
       // fall through to mint-sell
@@ -154,8 +173,8 @@ export async function buyGuaranteed(
     const mh = asHash(mint.hash);
     if (mh) txHashes.push(mh);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    if (/insufficient|balance|allowance/i.test(msg)) {
+    const msg = unwrapWrite(e);
+    if (/insufficient|balance|allowance|account does not exist/i.test(msg)) {
       throw new TradeCoreError(msg, "InsufficientFunds");
     }
     throw new TradeCoreError(
@@ -194,7 +213,7 @@ export async function buyGuaranteed(
       residualUnwanted = Math.max(0, residualUnwanted - sell.filled);
       refundUsdc += (sell.price ?? aggressive) * sell.filled;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = unwrapWrite(e);
       if (attempt === 1) {
         throw new TradeCoreError(
           `unwanted leg sell failed: ${msg} (txs=${txHashes.join(",")})`,
