@@ -215,6 +215,7 @@ export function App() {
             const red = await redeem(exchange, openBet.marketSymbol);
             if (cancelled) return;
             setPhase("settled");
+            if (red.txHash) setLastTx(red.txHash);
             const note = red.redeemed
               ? `Resolved — you won · redeemed ${red.amount}`
               : red.reason === "losing-or-empty"
@@ -320,6 +321,7 @@ export function App() {
         market,
         side,
         sizeUsdc: size,
+        hostId,
       });
       const bet: BetRecord = {
         id: `${Date.now()}`,
@@ -331,6 +333,7 @@ export function App() {
         marketSymbol: fill.marketSymbol,
         path: fill.path,
         txHashes: fill.txHashes,
+        userData: fill.userData,
         status: "open",
       };
       setBets(pushBet(bet));
@@ -338,7 +341,7 @@ export function App() {
       setLastTx(fill.txHashes[0] ?? null);
       setPhase("open");
       setStatusText(
-        `${side === "up" ? "Up" : "Down"} live · ${size} tUSDC · ${fill.path}`,
+        `${side === "up" ? "Up" : "Down"} live · ${size} tUSDC · ${fill.path} · ${fill.userData}`,
       );
       tgHaptic("success");
       void refreshBal(wallet.address);
@@ -631,6 +634,10 @@ export function App() {
             <a href={`${EXPLORER_TX}${lastTx}`} target="_blank" rel="noreferrer">
               Shannon explorer
             </a>
+            {" · "}
+            <a href={`/desk/?host=${encodeURIComponent(hostId)}`} target="_blank" rel="noreferrer">
+              Host desk
+            </a>
           </div>
         )}
         {(error || (!ready && !error)) && (
@@ -674,6 +681,7 @@ export function App() {
               <li key={b.id}>
                 <span>
                   {b.side.toUpperCase()} {b.size} · {b.status}
+                  {b.userData ? ` · ${b.userData}` : ""}
                   {b.note ? ` · ${b.note}` : ""}
                 </span>
                 <span>{new Date(b.at).toLocaleTimeString()}</span>

@@ -12,7 +12,40 @@ function faucetDevPlugin() {
       };
     }) {
       server.middlewares.use((req, res, next) => {
-        if (req.url?.split("?")[0] !== "/api/faucet" || req.method !== "POST") {
+        const path = req.url?.split("?")[0];
+        if (path === "/api/desk" && req.method === "GET") {
+          const url = new URL(req.url || "/", "http://local");
+          void (async () => {
+            try {
+              const { default: desk } = await import("../../api/desk.ts");
+              const query = Object.fromEntries(url.searchParams.entries());
+              await desk(
+                { method: "GET", query },
+                {
+                  setHeader: (k: string, v: string) => res.setHeader(k, v),
+                  status: (n: number) => ({
+                    json: (b: unknown) => {
+                      res.statusCode = n;
+                      res.setHeader("Content-Type", "application/json");
+                      res.end(JSON.stringify(b));
+                    },
+                  }),
+                },
+              );
+            } catch (e) {
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(
+                JSON.stringify({
+                  ok: false,
+                  error: e instanceof Error ? e.message : String(e),
+                }),
+              );
+            }
+          })();
+          return;
+        }
+        if (path !== "/api/faucet" || req.method !== "POST") {
           next();
           return;
         }
@@ -63,6 +96,7 @@ export default defineConfig({
         slip: resolve(__dirname, "slip/index.html"),
         demo: resolve(__dirname, "demo/index.html"),
         tma: resolve(__dirname, "tma/index.html"),
+        desk: resolve(__dirname, "desk/index.html"),
       },
       output: {
         manualChunks: {

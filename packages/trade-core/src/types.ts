@@ -9,6 +9,7 @@ export type BuyGuaranteedResult = {
   residualUnwanted: number;
   marketSymbol: string;
   desiredSymbol: string;
+  userData: string;
 };
 
 export class TradeCoreError extends Error {

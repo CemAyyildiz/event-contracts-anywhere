@@ -55,3 +55,4 @@ playwright-report/
 test-results/
 .vercel
 packages/widget/.brand-fonts/
+.demo-record/

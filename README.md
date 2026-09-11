@@ -20,7 +20,7 @@ A DreamDEX Event Contract slip you drop onto someone else’s page or chat. The 
 
 Chat: `https://event-contracts-anywhere.vercel.app/slip/?host=YOUR_DESK&market=BTC`
 
-Same card at `/demo/` (host page) and `/tma/` (Telegram WebView). Session wallet prints on the device. Showcase auto-funds 1 STT + 1 tUSDC; third-party embeds keep Get faucet. After a fill, Send moves tUSDC to any `0x`. `?host=` tags the fill — payouts are next, not this build.
+Same card at `/demo/` (host page) and `/tma/` (Telegram WebView). Session wallet prints on the device. Showcase auto-funds 1 STT + 1 tUSDC; third-party embeds keep Get faucet. After a fill, Send moves tUSDC to any `0x`. The host id is written into the order's `userData` on Shannon. The desk at `/desk/?host=` reads those tags from the Somnia Markets indexer.
 
 If the window has ≤60s left, wait for the next print.
 

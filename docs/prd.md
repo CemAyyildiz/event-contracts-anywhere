@@ -7,7 +7,7 @@
 
 ### Goals
 - Put a DreamDEX Event Contract **slip on a host’s surface** (web page or chat URL) so readers never open DreamDEX.
-- Attribute volume with `?host=` / `data-host` (payout settlement is post-MVP).
+- Attribute volume on-chain: `?host=` / `data-host` becomes order `userData`. Host desk reads the indexer. Payout claim is later.
 - Every Up/Down tap hits the live Shannon book (`buyGuaranteed` / mint-sell path).
 - Session wallet is the reader’s EOA; keys stay on device; they fund STT + tUSDC.
 - A 2–3 minute demo: host drop-in → reader fund → fill → explorer.
@@ -31,7 +31,7 @@ Empty Event Contract books are a **distribution** problem. Anywhere is a paste-i
 - **FR4:** Reader deposits STT (gas) and tUSDC (stake) to the session address. Testnet faucets are the funding path. **No sponsored first bet in MVP.**
 - **FR5:** If the window has ≤60s left, do not open a new position on that market; wait/select successor.
 - **FR6:** After settle, attempt redeem; losing/empty is a no-op with a clear status.
-- **FR7:** Every embed/URL carries `hostId` (`data-host` / `?host=` / `startapp`). Stored on local bet records. On-chain router **not** required for MVP.
+- **FR7:** Every embed/URL carries `hostId` (`data-host` / `?host=` / `startapp`). That id is written into the order `userData` on Shannon. The host desk lists tagged orders from the indexer.
 - **FR8:** `/` (landing) gives a copy-paste `<script>` and a chat URL for a chosen host id + market.
 - **FR9:** Widget is one codebase: iframe via `w.js` and the same app at `/` and `/tma`.
 - **FR10:** Live odds + top of book (SDK watch, REST poll fallback).
@@ -42,7 +42,7 @@ Empty Event Contract books are a **distribution** problem. Anywhere is a paste-i
 
 - **FR-B1:** Sponsor service: once-per-address STT + tUSDC with caps.
 - **FR-B2:** Host register, payout address, fee claim.
-- **FR-B3:** On-chain `RouterAttribution` or indexer-backed host metrics dashboard.
+- **FR-B3:** Host fee claim / `RouterAttribution` payouts. Desk already reads attributed volume.
 - **FR-B4:** Discord Activity (beyond a pasteable URL).
 - **FR-B5:** Encrypted key material at rest; export/import wallet.
 - **FR-B6:** Auto-redeem via Reactivity without polling.

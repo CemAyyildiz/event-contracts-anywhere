@@ -5,12 +5,14 @@
   "buildCommand": "pnpm --filter @eca/widget build",
   "outputDirectory": "packages/widget/dist",
   "functions": {
-    "api/faucet.ts": { "maxDuration": 30 }
+    "api/faucet.ts": { "maxDuration": 30 },
+    "api/desk.ts": { "maxDuration": 20 }
   },
   "rewrites": [
     { "source": "/slip", "destination": "/slip/index.html" },
     { "source": "/demo", "destination": "/demo/index.html" },
     { "source": "/tma", "destination": "/tma/index.html" },
+    { "source": "/desk", "destination": "/desk/index.html" },
     { "source": "/home", "destination": "/index.html" }
   ]
 }

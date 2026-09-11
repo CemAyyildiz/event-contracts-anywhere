@@ -88,6 +88,12 @@ const SURFACES = [
     blurb: "Full-bleed WebView. Not a destination bot — the chat was already the desk.",
   },
   {
+    name: "Host desk",
+    status: "live" as const,
+    href: "/desk/?host=wire-desk",
+    blurb: "Tagged orders on Shannon. Same userData the pool stored.",
+  },
+  {
     name: "Discord channels",
     status: "soon" as const,
     href: null,
@@ -103,7 +109,7 @@ const SURFACES = [
     name: "Host payouts",
     status: "next" as const,
     href: null,
-    blurb: "Once the fill is everywhere, the desk can claim. Attribution ships today.",
+    blurb: "Claim is later. Attribution is already on the order.",
   },
 ];
 
@@ -172,6 +178,7 @@ export function Landing() {
           <a className="hide" href="#surfaces">Surfaces</a>
           <a className="hide" href="#take">Snippet</a>
           <a href="/demo/">In a page</a>
+          <a className="hide" href="/desk/?host=wire-desk">Desk</a>
           <span className="live"><i className="dot" />Shannon</span>
           <a className="pill" href="/slip/?host=jury&market=BTC&peek=trade&demo=1">Open slip</a>
         </nav>
@@ -233,7 +240,7 @@ export function Landing() {
       >
         <div><b>50312</b><span>Shannon · live windows</span></div>
         <div><b>Session EOA</b><span>No connect · keys on device</span></div>
-        <div><b>?host=</b><span>Fill tagged to the desk</span></div>
+        <div><b>userData</b><span>Host tag on the order</span></div>
       </motion.div>
 
       <section className="section" id="how">
@@ -274,8 +281,8 @@ export function Landing() {
               <li>Slip already on the page</li>
               <li>Wallet prints on device</li>
               <li>Faucet 1 STT + 1 tUSDC</li>
-              <li>Up or Down</li>
-              <li>Send PnL to your address</li>
+              <li>Up or Down · tag lands on the order</li>
+              <li>Send PnL · desk reads the tape</li>
             </ol>
           </motion.article>
         </div>
@@ -287,7 +294,9 @@ export function Landing() {
           viewport={{ once: true }}
         >
           Host picks an id, pastes a script or a URL. Reader stays put.
-          <code>?host=</code> tags the fill — payouts are next, not this demo.
+          The tap writes that id into the order&apos;s <code>userData</code> on
+          Shannon. The <a href="/desk/?host=wire-desk">desk</a> reads it from
+          the indexer. Host payout claim is later.
         </motion.p>
       </section>
 

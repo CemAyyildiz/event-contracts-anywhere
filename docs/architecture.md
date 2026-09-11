@@ -1,12 +1,12 @@
 # Anywhere — Architecture
 
-Client-only MVP on Somnia Shannon (`50312`): `trade-core` + `widget`. Sponsor, indexer, dashboard, and contracts are post-MVP.
+Client-only app on Somnia Shannon (`50312`): `trade-core` + `widget` + host desk. Sponsor payouts and a custom router contract are still later.
 
 ## 0. Correct course (2026-09-10)
 
-Shipped path: host drops `w.js` or a `/?host=` URL → session EOA on device → **reader funds** STT + tUSDC → `buyGuaranteed` on Shannon.
+Shipped path: host drops `w.js` or a `/?host=` URL → session EOA on device → **reader funds** STT + tUSDC → `buyGuaranteed` on Shannon with `userData` = `keccak256("anywhere.v1:" + host)[:8]`. Desk at `/desk/` reads tagged orders from the Somnia Markets indexer.
 
-**Not MVP:** `POST /sponsor`, `RouterAttribution`, host payout dashboard. Diagrams below that still mention those apps describe the **backlog** shape, not what is deployed.
+**Not this build:** `POST /sponsor`, host fee claim, `RouterAttribution.sol`. Diagrams below that still mention those apps describe the **backlog** shape, not what is deployed.
 
 ## 1. Paradigm
 
@@ -15,7 +15,7 @@ Shipped path: host drops `w.js` or a `/?host=` URL → session EOA on device →
 - Signing happens in the browser / TMA WebView with a local session EOA.
 - Keys never leave the client. There is no sponsor service in production.
 - Thin-book fills: `mintSet` + IOC sell of the unwanted leg (`buyGuaranteed`).
-- Attribution in MVP: `hostId` query/script attribute + local bet records. On-chain router is Path A **later**.
+- Attribution: `hostId` from query/script/`startapp` is stamped into the order `userData` on Shannon. Local bet records keep a copy. Host desk reads the same tag from the indexer. Fee claim is later.
 
 ```mermaid
 flowchart LR

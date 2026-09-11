@@ -1,4 +1,5 @@
 import type { SomniaMarkets } from "@somnia-chain/markets-sdk";
+import { encodeHostTag, formatHostTag } from "./attribution.js";
 import type { TradeableMarket } from "./getTradeableMarket.js";
 import {
   TradeCoreError,
@@ -88,7 +89,28 @@ export type BuyGuaranteedParams = {
   side: Side;
   sizeUsdc: number;
   maxSlippageBps?: number;
+  /** Host id stamped into the order's on-chain userData. */
+  hostId?: string;
 };
+
+async function withUserData<T>(
+  exchange: SomniaMarkets,
+  userData: bigint,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const trader = exchange.trader;
+  const original = trader.placeOrder.bind(trader);
+  trader.placeOrder = (params) =>
+    original({
+      ...params,
+      userData: params.userData && params.userData !== 0n ? params.userData : userData,
+    });
+  try {
+    return await fn();
+  } finally {
+    trader.placeOrder = original;
+  }
+}
 
 /**
  * Directional fill with thin-book fallback: IOC buy, else mintSet + IOC sell unwanted.
@@ -97,13 +119,25 @@ export async function buyGuaranteed(
   exchange: SomniaMarkets,
   params: BuyGuaranteedParams,
 ): Promise<BuyGuaranteedResult> {
-  const { market, side, sizeUsdc } = params;
-  const slipBps = params.maxSlippageBps ?? MAX_SLIPPAGE_BPS;
+  const userData = encodeHostTag(params.hostId ?? "anonymous");
+  const userDataHex = formatHostTag(userData);
   const txHashes: `0x${string}`[] = [];
 
-  if (!(sizeUsdc > 0)) {
+  if (!(params.sizeUsdc > 0)) {
     throw new TradeCoreError("sizeUsdc must be > 0", "FillFailed");
   }
+
+  return withUserData(exchange, userData, () => runBuy(exchange, params, userDataHex, txHashes));
+}
+
+async function runBuy(
+  exchange: SomniaMarkets,
+  params: BuyGuaranteedParams,
+  userDataHex: string,
+  txHashes: `0x${string}`[],
+): Promise<BuyGuaranteedResult> {
+  const { market, side, sizeUsdc } = params;
+  const slipBps = params.maxSlippageBps ?? MAX_SLIPPAGE_BPS;
 
   await assertTrading(exchange, market);
 
@@ -155,6 +189,7 @@ export async function buyGuaranteed(
           residualUnwanted: 0,
           marketSymbol: market.marketSymbol,
           desiredSymbol,
+          userData: userDataHex,
         };
       }
       // partial → fall through to mint-sell for remainder intent (full size remint path)
@@ -232,5 +267,6 @@ export async function buyGuaranteed(
     residualUnwanted,
     marketSymbol: market.marketSymbol,
     desiredSymbol,
+    userData: userDataHex,
   };
 }

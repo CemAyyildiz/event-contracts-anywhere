@@ -16,6 +16,15 @@ export {
 } from "./buyGuaranteed.js";
 export { redeem, type RedeemResult } from "./redeem.js";
 export {
+  encodeHostTag,
+  formatHostTag,
+  normalizeHostId,
+  parseHostTag,
+  tagMatchesHost,
+} from "./attribution.js";
+export { fetchHostTape, type HostOrder, type HostTape } from "./hostTape.js";
+export { verifyTaggedTx, type VerifiedTag } from "./verifyTag.js";
+export {
   TradeCoreError,
   type BuyGuaranteedResult,
   type Side,

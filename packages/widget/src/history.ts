@@ -10,6 +10,7 @@ export type BetRecord = {
   marketSymbol: string;
   path: string;
   txHashes: string[];
+  userData?: string;
   status: "open" | "settled";
   note?: string;
 };
