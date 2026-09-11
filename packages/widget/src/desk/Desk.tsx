@@ -60,11 +60,17 @@ export function Desk() {
     setVerify(null);
     try {
       const res = await fetch(`/api/desk?host=${encodeURIComponent(hostId)}`);
-      const data = (await res.json()) as { ok?: boolean; tape?: Tape; error?: string };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        tape?: Tape;
+        error?: string;
+        warning?: string;
+      };
       if (!res.ok || !data.ok || !data.tape) {
         throw new Error(data.error || "desk failed");
       }
       setTape(data.tape);
+      if (data.warning) setError(data.warning);
       const next = new URL(window.location.href);
       next.searchParams.set("host", hostId);
       window.history.replaceState(null, "", next);
