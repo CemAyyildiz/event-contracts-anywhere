@@ -7,205 +7,99 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
       rel="stylesheet"
     />
     <style>
-      :root {
-        --paper: #efe6d4;
-        --paper-2: #e4d8c3;
-        --ink: #1a1612;
-        --mute: #6b6256;
-        --rule: #c4b9a4;
-        --up: #165c38;
-        --stamp: #c45c1a;
-      }
+      :root { --bg:#070709; --fg:#f7f7f8; --muted:#9b9ba8; --line:rgba(255,255,255,.08); --gold:#e8d5a3; }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: "Source Sans 3", sans-serif;
-        background: var(--paper);
-        color: var(--ink);
-        line-height: 1.5;
+        font-family: Geist, Inter, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
         min-height: 100vh;
-        background-image:
-          radial-gradient(circle at 1px 1px, rgba(26, 22, 18, 0.045) 1px, transparent 0);
-        background-size: 7px 7px;
       }
-      .tape {
-        overflow: hidden;
-        background: var(--ink);
-        color: var(--paper);
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.65rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        white-space: nowrap;
-      }
-      .tape span { display: inline-block; padding: 0.35rem 0; animation: tick 22s linear infinite; }
-      @keyframes tick { to { transform: translateX(-50%); } }
-      .mast {
-        border-bottom: 4px solid var(--ink);
-        padding: 0.85rem 1.1rem 0.7rem;
-        text-align: center;
-      }
-      .mast .k {
+      .top {
         display: flex;
         justify-content: space-between;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.62rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--mute);
+        align-items: center;
+        padding: 1rem 1.4rem;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.82rem;
+        color: var(--muted);
       }
-      .mast h1 {
-        font-family: "Archivo Narrow", sans-serif;
-        font-size: clamp(2.5rem, 10vw, 4.4rem);
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        margin: 0.1rem 0 0.15rem;
-        line-height: 0.88;
-      }
-      .rail {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.66rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        border-bottom: 1px solid var(--ink);
-        padding: 0.35rem 1.1rem;
-      }
+      .top b { color: var(--fg); font-weight: 600; letter-spacing: -0.03em; }
       .grid {
-        max-width: 58rem;
+        max-width: 1080px;
         margin: 0 auto;
-        padding: 1.35rem 1.1rem 2.2rem;
+        padding: 3.2rem 1.4rem 3rem;
         display: grid;
-        gap: 1.6rem;
+        gap: 2.4rem;
       }
-      .col h2 {
-        font-family: "Archivo Narrow", sans-serif;
+      @media (min-width: 880px) {
+        .grid { grid-template-columns: 1fr 26rem; align-items: start; }
+      }
+      .k {
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        letter-spacing: 0.02em;
-        font-size: clamp(1.7rem, 5vw, 2.35rem);
-        line-height: 0.94;
-        margin: 0 0 0.55rem;
+        color: var(--gold);
+        margin-bottom: 0.8rem;
       }
-      .by {
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.62rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--mute);
-        margin: 0 0 0.85rem;
+      h1 {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: clamp(2.2rem, 5vw, 3.4rem);
+        font-weight: 400;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 1rem;
       }
-      .col p { margin: 0 0 0.85rem; }
-      .stamp {
-        display: inline-block;
-        border: 2px solid var(--up);
-        color: var(--up);
-        font-family: "Archivo Narrow", sans-serif;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        padding: 0.18rem 0.42rem;
-        font-size: 0.72rem;
-        margin-bottom: 0.7rem;
-      }
-      .slot {
-        border: 2px solid var(--ink);
-        box-shadow: 8px 8px 0 var(--ink);
-        padding: 0.55rem;
-        background: var(--paper);
-        position: relative;
-      }
-      .slot .tag {
-        position: absolute;
-        top: 0.7rem;
-        right: -0.4rem;
-        transform: rotate(11deg);
-        border: 2px solid var(--stamp);
-        color: var(--stamp);
-        font-family: "Archivo Narrow", sans-serif;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        font-size: 0.68rem;
-        padding: 0.15rem 0.35rem;
-        background: rgba(239, 230, 212, 0.9);
-        z-index: 2;
-        pointer-events: none;
+      p { color: var(--muted); line-height: 1.55; margin: 0 0 0.9rem; max-width: 40ch; }
+      .frame {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        overflow: hidden;
+        background: #09090b;
+        box-shadow: 0 30px 80px rgba(0,0,0,.45);
       }
       footer {
-        max-width: 58rem;
+        max-width: 1080px;
         margin: 0 auto;
-        padding: 0 1.1rem 1.5rem;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 0.66rem;
-        color: var(--mute);
+        padding: 0 1.4rem 2rem;
         display: flex;
         justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: 0.78rem;
       }
       footer a { color: inherit; }
-      @media (min-width: 860px) {
-        .grid { grid-template-columns: 1fr 26.5rem; align-items: start; }
-      }
-      @media (max-width: 520px) {
-        .mast .k { justify-content: center; flex-wrap: wrap; gap: 0.4rem; }
-      }
     </style>
   </head>
   <body>
-    <div class="tape" aria-hidden="true">
-      <span>
-        Desk copy · not DreamDEX · host=wire-desk · Shannon 50312 · one script tag ·
-        Desk copy · not DreamDEX · host=wire-desk · Shannon 50312 · one script tag ·
-      </span>
-    </div>
-    <div class="mast">
-      <div class="k">
-        <span>Vol. 12</span>
-        <span>11 Sep 2026</span>
-        <span>Late city</span>
-      </div>
-      <h1>The Wire Desk</h1>
-    </div>
-    <div class="rail">
-      <span>Shannon 50312</span>
-      <span>Host = wire-desk</span>
-      <span>The slip never leaves this page</span>
+    <div class="top">
+      <b>Wire Desk</b>
+      <span>A host page · not DreamDEX</span>
     </div>
     <div class="grid">
-      <div class="col">
-        <div class="stamp">In the story</div>
-        <h2>Bitcoin’s next print — decide without leaving the copy</h2>
-        <p class="by">Markets desk · the reader does not open a destination app</p>
+      <div>
+        <div class="k">In the story</div>
+        <h1>Bitcoin’s next print — without leaving the copy.</h1>
         <p>
-          This is a publisher page. The ticket on the right is the product:
-          a DreamDEX Event Contract slip dropped into someone else’s layout.
+          This is someone else’s site. The card on the right is the product:
+          a DreamDEX Event Contract slip dropped into the layout.
         </p>
         <p>
-          Same card a Telegram or Discord message can open. Session wallet on
-          the reader’s device. They fund. Up or Down hits the live book.
-          Attribution stays on this host id.
-        </p>
-        <p>
-          The empty book is a distribution problem. The fill still settles on
-          Shannon. The reader never had to go there.
+          Same object a chat URL opens. Session wallet on the reader’s device.
+          Get faucet. Up or Down hits Shannon. Attribution stays on this host.
         </p>
       </div>
-      <div class="slot">
-        <div class="tag">On this page</div>
+      <div class="frame">
         <script src="/w.js" data-host="wire-desk" data-market="BTC" data-peek="trade"></script>
       </div>
     </div>
     <footer>
       <span>Anywhere embed · not financial advice</span>
-      <a href="/">Back to the extra</a>
+      <a href="/">Back</a>
     </footer>
   </body>
 </html>

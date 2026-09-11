@@ -23,7 +23,7 @@
   iframe.title = "Event Contracts slip";
   iframe.allow = "clipboard-write";
   iframe.style.cssText =
-    "width:100%;border:0;overflow:hidden;display:block;min-height:520px;background:#efe6d4;";
+    "width:100%;border:0;overflow:hidden;display:block;min-height:520px;background:#09090b;";
   wrap.appendChild(iframe);
 
   s.parentNode.insertBefore(wrap, s);
